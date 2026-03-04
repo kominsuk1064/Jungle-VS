@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Make a Topic</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        .field { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .field label { margin: 0 15px; font-weight: bold; }
+        .hero-body { background-color: #fcfcfc; }
+    </style>
+</head>
+<body>
+    <section class="hero is-fullheight">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title is-1">Make a Topic</h1>
+                <p class="subtitle">새로운 VS 주제를 등록해보세요!</p>
+
+                <div class="field">
+                    <label class="label">Left</label>
+                    <div class="control">
+                        <input id="input-left" class="input is-medium" type="text" placeholder="항목 A 입력" />
+                    </div>
+                    <label class="label">VS</label>
+                    <div class="control">
+                        <input id="input-right" class="input is-medium" type="text" placeholder="항목 B 입력" />
+                    </div>
+                    <label class="label">Right</label>
+                </div>
+
+                <div class="buttons is-centered">
+                    <button class="button is-link is-large" onclick="makeTopic()">주제 생성하기</button>
+                    <button class="button is-light is-large" onclick="location.href='/'">돌아가기</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function makeTopic() {
+            let left = $('#input-left').val();
+            let right = $('#input-right').val();
+
+            if (left == "" || right == "") {
+                alert("항목을 모두 입력해주세요!");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/api/topic",
+                data: { left: left, right: right },
+                success: function (response) {
+                    alert(response.msg);
+                    window.location.href = "/"; // 성공 시 메인 페이지로 이동
+                },
+                error: function (error) {
+                    alert("주제 생성에 실패했습니다.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

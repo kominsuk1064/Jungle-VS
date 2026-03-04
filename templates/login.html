@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jungle VS | 로그인</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  </head>
+  <body>
+    <h1>Login</h1>
+    <div>
+      <label for="uid">Username:</label>
+      <input type="text" id="uid" required /><br /><br />
+      <label for="upw">Password:</label>
+      <input type="password" id="upw" required /><br /><br />
+      <button onclick="doLogin()">Login</button>
+      <button onclick="location.href='/signup'">Sign Up</button>
+    </div>
+
+    <script>
+      function doLogin() {
+        let username = $('#uid').val()
+        let password = $('#upw').val()
+      
+        if (username == '' || password == '') {
+          alert('아이디와 비밀번호를 입력해주세요.')
+          return
+        }
+      
+        $.ajax({
+          type: 'POST',
+          url: '/api/login',
+          data: {
+            username: username,
+            password: password
+          },
+          success: function (response) {
+            if (response['result'] == 'success') {
+              document.cookie = 'mytoken=' + response['token'] + '; path=/'
+              window.location.href = '/'
+            } else {
+              alert(response['msg'])
+            }
+          },
+          error: function (error) {
+            console.log(error)
+            alert('서버 통신 에러가 발생했습니다.')
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

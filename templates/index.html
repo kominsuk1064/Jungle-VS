@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <title>Jungle VS - 확정 투표 방식</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        .topic-box {
+            border: 2px solid #333;
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        .nav-bar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ddd;
+        }
+        .vote-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .selected {
+            border: 3px solid #007bff !important;
+            background-color: #e7f1ff;
+        }
+        .confirm-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
+            font-weight: bold;
+            border-radius: 5px;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-bar">
+        <span><b>{{ user_info.nickname }}</b>님 접속 중</span>
+        <div>
+            <button onclick="location.href='/make_topic_page'">+ 주제 만들기</button>
+            <button onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <h1 style="text-align: center;">실시간 투표 리스트</h1>
+
+    <div id="topic-list">
+        {% for topic in topics %}
+        <div class="topic-box">
+            <h2 style="text-align: center;">{{ topic.left_item }} VS {{ topic.right_item }}</h2>
+            
+            <div style="display: flex; justify-content: center;">
+                <button id="btn-left-{{ topic._id }}" 
+                        class="vote-btn" 
+                        onclick="selectOption('{{ topic._id }}', 'left')">
+                    {{ topic.left_item }} ({{ topic.left_count }})
+                </button>
+                
+                <button id="btn-right-{{ topic._id }}" 
+                        class="vote-btn" 
+                        onclick="selectOption('{{ topic._id }}', 'right')">
+                    {{ topic.right_item }} ({{ topic.right_count }})
+                </button>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="confirm-{{ topic._id }}" 
+                        class="confirm-btn" 
+                        onclick="confirmVote('{{ topic._id }}')" 
+                        disabled 
+                        style="background-color: #ccc; cursor: not-allowed;">
+                    이 항목으로 투표 확정
+                </button>
+            </div>
+
+            <hr>
+            <div style="margin-top: 15px; text-align: center;">
+                <input type="text" id="input-{{ topic._id }}" placeholder="의견을 입력하세요" style="width: 70%; padding: 5px;">
+                <button onclick="comment('{{ topic._id }}')">등록</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let selectedStorage = {};
+
+        function selectOption(topicId, option) {
+            selectedStorage[topicId] = option;
+
+            $(`#btn-left-${topicId}`).removeClass('selected');
+            $(`#btn-right-${topicId}`).removeClass('selected');
+            
+            if (option === 'left') {
+                $(`#btn-left-${topicId}`).addClass('selected');
+            } else {
+                $(`#btn-right-${topicId}`).addClass('selected');
+            }
+
+            let confirmBtn = $(`#confirm-${topicId}`);
+            confirmBtn.prop('disabled', false);
+            confirmBtn.css({
+                'background-color': '#28a745', 
+                'color': 'white', 
+                'cursor': 'pointer'
+            });
+        }
+
+        function confirmVote(topicId) {
+            let selectedOption = selectedStorage[topicId];
+            
+            if (!selectedOption) {
+                alert("항목을 먼저 선택해주세요!");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/api/vote",
+                data: { topic_id: topicId, option: selectedOption },
+                success: function (response) {
+                    alert(response.msg);
+                    if (response.result === 'success') {
+                        window.location.reload();
+                    }
+                }
+            });
+        }
+
+        function comment(topicId) {
+            let content = $(`#input-${topicId}`).val();
+            if (content === "") return alert("내용을 입력해주세요.");
+
+            $.ajax({
+                type: "POST",
+                url: "/api/comment",
+                data: { topic_id: topicId, comment: content },
+                success: function (response) {
+                    alert("댓글이 저장되었습니다.");
+                    window.location.reload();
+                }
+            });
+        }
+
+        function logout() {
+            document.cookie = "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = "/login";
+        }
+    </script>
+</body>
+</html>
