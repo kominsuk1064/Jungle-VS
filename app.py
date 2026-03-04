@@ -3,6 +3,7 @@ import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -61,13 +62,13 @@ def signup_post():
     email = request.form['username']
     password = request.form['password']
     nickname = request.form['nickname']
-    
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     if db.users.find_one({'email': email}):
         return jsonify({'result': 'fail', 'msg': '이미 존재하는 이메일입니다.'})
 
     db.users.insert_one({
         'email': email,
-        'password': password,
+        'password': hashed_password,
         'nickname': nickname
     })
     return jsonify({'result': 'success', 'msg': '회원가입 완료!'})
@@ -76,16 +77,24 @@ def signup_post():
 def login_post():
     email = request.form['username']
     password = request.form['password']
-    
-    user = db.users.find_one({'email': email, 'password': password})
-    if user:
-        payload = {
-            'email': email,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-        }
-        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-        return jsonify({'result': 'success', 'token': token})
-    return jsonify({'result': 'fail', 'msg': '로그인 정보를 확인해주세요.'})
+
+    user = db.users.find_one({'email': email})
+
+    # 1) 아이디로 DB를 서칭, 없을시 실패 얼럿
+    if not user : 
+        return jsonify({'result': 'fail', 'msg':'존재하지 않는 ID입니다.'})
+
+    # 2번) 비밀번호가 일치하지 않을 시 
+    if not check_password_hash(user.get('password'), password):
+        return jsonify({'result': 'fail', 'msg':'비밀번호가 틀립니다.'})
+
+    #로그인 성공시 토큰 발급 
+    payload = {
+        'email': email,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    return jsonify({'result': 'success', 'token': token})
 
 
 @app.route('/api/vote', methods=['POST'])
