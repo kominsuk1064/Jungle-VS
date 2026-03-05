@@ -40,18 +40,22 @@ def home():
         ]
         topics = list(db.topics.aggregate(pipeline))
         
+        live_topics = []
+        # 만료시간이 지났다면 DB에서 Trash를 False로 업데이트
         for t in topics:
-            # 만든지 30초 후에 만료
             t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
 
             if datetime.datetime.now() >= t['expire_at'] : 
                 t['trash'] = False
                 db.topics.update_one({"_id":t['_id']},{"$set":{"trash":False}})
             
-            t['_id'] = str(t['_id'])
+            # Trash 값이 True인 것들만 HTML로 보냄
+            if t['trash']:
+                t['_id'] = str(t['_id'])
+                live_topics.append(t)
+        
 
-
-        return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type)
+        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
     except:
         return redirect(url_for('login'))
     
