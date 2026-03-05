@@ -272,7 +272,7 @@
               <div class="comment_container" style="min-width: 428.38px;">
                 {% for comment in topic.comments %}
                 <div class="comment-item has-text-left">
-                  <span class="comment-user">{{ comment.user_email }}</span>:
+                  <span class="comment-user">{{ comment.user_nickname }}</span>:
                   <span class="comment-text">{{ comment.content }}</span>
                 </div>
                 {% endfor %}
@@ -482,7 +482,7 @@
             list.append(
               `
               <div class="comment-item has-text-left">
-                  <span class="comment-user">${response.comment ? response.comment.user_email : ''}</span>:
+                  <span class="comment-user">${response.comment ? response.comment.user_nickname : ''}</span>:
                   <span class="comment-text">${content}</span>
                 </div>
               `
@@ -524,7 +524,7 @@
 
           if (response.comments && response.comments.length > 0) {
             response.comments.forEach(comment => {
-              list.append(`<div><p><strong>${comment.user_email}</strong></p><p>${comment.content}</p></div>`);
+              list.append(`<div><p><strong>${comment.user_nickname}</strong></p><p>${comment.content}</p></div>`);
             });
           } else {
             list.append("<p>아직 의견이 없습니다. 첫 번째로 의견을 남겨보세요!</p>");

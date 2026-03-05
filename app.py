@@ -237,8 +237,10 @@ def post_comment():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_info = db.users.find_one({'email': payload['email']}, {'nickname': 1})
         comment_doc = {
-            'user_email': payload['email'], 
+            'user_email': payload['email'],
+            'user_nickname': user_info.get('nickname', '익명') if user_info else '익명',
             'topic_id': request.form['topic_id'], 
             'content': request.form['comment'], 
             'created_at': datetime.datetime.now()
