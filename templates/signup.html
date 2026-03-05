@@ -1,64 +1,115 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Signup</title>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  </head>
-  <body>
-    <h1>Signup</h1>
-    <div>
-      <label for="username">Username (Email):</label>
-      <input type="text" id="username" required /><br /><br />
 
-      <label for="password">Password:</label>
-      <input type="password" id="password" required /><br /><br />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    .animated-bg {
+      background: linear-gradient(-45deg,
+          #00d1b2,
+          #ebfffc,
+          #ebfffa,
+          #00d1b2,
+          #effaf5);
+      background-size: 400% 400%;
+      animation: gradientMove 10s ease infinite;
+    }
 
-      <label for="rePassword">Re-Enter Password:</label>
-      <input type="password" id="rePassword" required /><br /><br />
-
-      <label for="nickname">Nickname:</label>
-      <input type="text" id="nickname" required /><br /><br />
-
-      <button onclick="doSignup()">가입하기</button>
-      <button onclick="location.href='/login'">로그인으로 돌아가기</button>
-    </div>
-
-    <script>
-      function doSignup() {
-        let username = $('#username').val()
-        let password = $('#password').val()
-        let nickname = $('#nickname').val()
-        let rePassword =  $('#rePassword').val()
-        if (username == '' || password == '' || rePassword == '' || nickname == '') {
-          alert('모든 필드를 입력해주세요.')
-          return
-        }
-      
-        $.ajax({
-          type: 'POST',
-          url: '/api/signup',
-          data: {
-            username: username,
-            password: password,
-            nickname: nickname,
-            rePassword: rePassword
-          },
-          success: function (response) {
-            if (response['result'] == 'success') {
-              alert(response['msg'])
-              window.location.href = '/login'
-            } else {
-              alert(response['msg'])
-            }
-          },
-          error: function (error) {
-            console.error('Error:', error)
-            alert('서버 통신 중 오류가 발생했습니다.')
-          }
-        })
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
       }
-    </script>
-  </body>
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <section class="hero is-fullheight ">
+
+      <div class="animated-bg hero-body is-flex is-justify-content-center ">
+        <figure class="image ">
+          <img src="{{ url_for('static', filename='junglevs.png') }}" style="width:1000px; height:800px;"
+            alt="JungleVS">
+        </figure>
+        <div class="box has-text-centered has-background-success-light" style="height: 530px; width: 400px">
+          <h1 class="title is-1 m-5">회원가입</h1>
+          <div class="field mb-6">
+            <div class="control mb-5">
+              <input class="input" type="text" id="username" placeholder="Email" required>
+            </div>
+            <div class="control">
+              <input class="input mb-5" type="password" id="password" placeholder="Password" required>
+            </div>
+            <div class="control">
+              <input class="input mb-5" type="password" id="rePassword" placeholder="Re-Enter Password" required>
+            </div>
+            <div class="control">
+              <input class="input mb-5" type="text" id="nickname" placeholder="Nickname" required>
+            </div>
+            <div class="field mt-5">
+              <div class="control">
+                <button onclick="doSignup()" class="button is-success is-fullwidth mb-5 ">가입하기</button>
+              </div>
+              <div class="control">
+                <button onclick="location.href='/login'"
+                  class="button is-success is-outlined is-fullwidth ">로그인으로 돌아가기</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function doSignup() {
+      let username = $('#username').val()
+      let password = $('#password').val()
+      let nickname = $('#nickname').val()
+      let rePassword = $('#rePassword').val()
+      if (username == '' || password == '' || rePassword == '' || nickname == '') {
+        alert('모든 필드를 입력해주세요.')
+        return
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: '/api/signup',
+        data: {
+          username: username,
+          password: password,
+          nickname: nickname,
+          rePassword: rePassword
+        },
+        success: function (response) {
+          if (response['result'] == 'success') {
+            alert(response['msg'])
+            window.location.href = '/login'
+          } else {
+            alert(response['msg'])
+          }
+        },
+        error: function (error) {
+          console.error('Error:', error)
+          alert('서버 통신 중 오류가 발생했습니다.')
+        }
+      })
+    }
+  </script>
+</body>
+
 </html>
