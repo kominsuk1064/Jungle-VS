@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta
       http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
+      content="no-cache, private, no-store, must-revalidate"
     />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -29,14 +29,6 @@
         justify-content: space-between;
         border-bottom: 1px solid #ddd;
       }
-      .vote-btn {
-        padding: 10px 20px;
-        margin: 5px;
-        cursor: pointer;
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
       .selected {
         border: 3px solid #007bff !important;
         background-color: #e7f1ff;
@@ -47,34 +39,31 @@
         font-weight: bold;
         border-radius: 5px;
         border: none;
-      }
-
-      article {
-        width: 70%;
+        transition: all 0.2s;
       }
 
       .box {
         width: 40%;
         display: inline-block;
         margin: 0 1rem;
+        cursor: pointer;
       }
 
-      .button.is-primary {
-        width: 75%;
-      }
-
-      .button .is-danger {
-        width: 20%;
-      }
-
+      /* 프로그레스 바: 배경은 빨강(오른쪽), 채워지는 부분은 파랑(왼쪽) */
       .progress {
         width: 80%;
         margin: 1rem auto;
+        appearance: none;
+        -webkit-appearance: none;
       }
-
-      .textarea {
-        width: 70%;
-        margin: 1rem auto;
+      .progress::-webkit-progress-bar {
+        background-color: #ff3860;
+        border-radius: 10px;
+      }
+      .progress::-webkit-progress-value {
+        background-color: #209cee;
+        border-radius: 10px;
+        transition: width 0.5s ease;
       }
 
       .comment_box {
@@ -88,15 +77,6 @@
         margin: 1rem auto;
       }
 
-      .is-rtl {
-        direction: rtl;
-      }
-
-      .comment_container > p {
-        display: inline-block;
-      }
-
-      /* 정렬 및 필터 탭 스타일 */
       .sort-container {
         margin: 10px 0;
       }
@@ -150,7 +130,7 @@
               <div class="battle">
                 <div
                   id="btn-left-{{topic._id}}"
-                  class="box"
+                  class="box {% if topic.user_voted == 'left' %}selected{% endif %}"
                   onclick="selectOption('{{ topic._id }}', 'left')"
                 >
                   <div class="option">
@@ -160,7 +140,7 @@
 
                 <div
                   id="btn-right-{{topic._id}}"
-                  class="box"
+                  class="box {% if topic.user_voted == 'right' %}selected{% endif %}"
                   onclick="selectOption('{{topic._id}}', 'right')"
                 >
                   <div class="option">
@@ -169,17 +149,19 @@
                 </div>
               </div>
               
+              {% set total = topic.left_count + topic.right_count %}
+              {% set display_val = (topic.left_count / total * 100) if total > 0 else 50 %}
               <progress
                 id="progress-{{topic._id}}"
                 class="progress is-large"
-                value="0"
-                max="{{ topic.left_count + topic.right_count if topic.left_count + topic.right_count > 0 else 1 }}"
-                data-left-count="{{ topic.left_count }}"
-                data-right-count="{{ topic.right_count }}"
+                value="{{ display_val }}"
+                max="100"
               ></progress>
 
-              <p>left: {{ topic.left_count }}</p>
-              <p>right: {{ topic.right_count }}</p>
+              <div class="is-flex is-justify-content-space-between px-6" style="margin-bottom: 10px;">
+                <p>Left: <b>{{ topic.left_count }}</b></p>
+                <p>Right: <b>{{ topic.right_count }}</b></p>
+              </div>
 
               <div style="text-align: center">
                 <button
@@ -189,45 +171,28 @@
                   disabled
                   style="background-color: #ccc; cursor: not-allowed"
                 >
-                  이 항목으로 투표 확정
+                  {% if topic.user_voted %}이미 투표 완료{% else %}투표 확정하기{% endif %}
                 </button>
               </div>
 
               <div class="topic_info">
-                <p> {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
-                <p>총 투표수: {{ topic.left_count + topic.right_count }}</p>
+                <p> {{ topic.expire_at.strftime("%H시 %M분") if topic.expire_at else "상시" }} 만료 </p>
+                <p>총 투표수: {{ total }}</p>
                 <p>made-by: {{ topic.created_by }}</p>
               </div>
 
               <hr />
 
-              <div
-                class="is-flex is-align-items-center is-justify-content-center mx-auto"
-              >
-                <button
-                  class="comment-toggle-btn button"
-                  data-topic-id="{{ topic._id }}"
-                >
-                  Show Comments
-                </button>
+              <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                <button class="comment-toggle-btn button" data-topic-id="{{ topic._id }}">Show Comments</button>
               </div>
 
-              <div
-                id="comment_box_{{ topic._id }}"
-                class="comment_box"
-                style="display: none"
-              >
+              <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
                 <div class="container">
-                  <input
-                    type="text"
-                    id="input-{{ topic._id }}"
-                    placeholder="의견을 입력하세요"
-                    style="width: 80%; padding: 5px"
-                  />
+                  <input type="text" id="input-{{ topic._id }}" placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
                   <button onclick="comment('{{ topic._id }}')">등록</button>
                 </div>
                 <hr />
-
                 <div class="comments-list">
                   {% for comment in topic.comments %}
                     <div class="comment_container">
@@ -236,7 +201,7 @@
                     </div>
                     <hr />
                   {% endfor %}
-              </div>
+                </div>
               </div>
             </div>
           </div>
@@ -246,11 +211,7 @@
     </div>
 
     <div style="text-align: center; margin: 30px">
-      <button
-        id="load-more-btn"
-        onclick="loadMore()"
-        style="padding: 10px 50px; cursor: pointer"
-      >
+      <button id="load-more-btn" onclick="loadMore()" style="padding: 10px 50px; cursor: pointer">
         더보기 (+10)
       </button>
     </div>
@@ -258,68 +219,83 @@
     <script>
       let currentCount = 10;
       let selectedStorage = {};
-
       const urlParams = new URLSearchParams(window.location.search);
       let currentSort = urlParams.get('sort') || 'newest';
       let currentView = urlParams.get('view') || 'all';
 
-      window.onpageshow = function (event) {
-        if (
-          event.persisted ||
-          (window.performance && window.performance.navigation.type == 2)
-        ) {
-          window.location.reload();
-        }
-        let token = document.cookie
-          .split("; ")
-          .find((row) => row.trim().startsWith("mytoken="));
-        if (!token) {
-          window.location.replace("/login");
-        }
-      };
+      function selectOption(topicId, option) {
+        // 클라이언트 측에서 선택 시각화만 수행 (투표 확정 전까지 바 고정)
+        selectedStorage[topicId] = option;
+        $(`#btn-left-${topicId}`).removeClass("selected");
+        $(`#btn-right-${topicId}`).removeClass("selected");
+        $(`#btn-${option}-${topicId}`).addClass("selected");
+
+        let confirmBtn = $(`#confirm-${topicId}`);
+        confirmBtn.prop("disabled", false);
+        confirmBtn.css({ "background-color": "#28a745", color: "white", cursor: "pointer" });
+      }
+
+      function confirmVote(topicId) {
+        let selectedOption = selectedStorage[topicId];
+        if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
+        
+        $.ajax({
+          type: "POST",
+          url: "/api/vote",
+          data: { topic_id: topicId, option: selectedOption },
+          success: function (response) {
+            // 서버에서 "이미 투표에 참여하셨습니다" 등의 메시지가 오면 alert로 보여줌
+            alert(response.msg);
+            if (response.result === "success") { 
+                window.location.reload(); 
+            } else {
+                // 이미 투표한 경우 등을 처리하기 위해 새로고침하여 상태 동기화
+                window.location.reload();
+            }
+          },
+        });
+      }
 
       function loadMore() {
         $.ajax({
           type: "GET",
           url: "/api/get_topics",
-          data: { 
-            skip: currentCount,
-            sort: currentSort,
-            view: currentView
-          },
+          data: { skip: currentCount, sort: currentSort, view: currentView },
           success: function (response) {
             let newTopics = response.topics;
-
             if (newTopics.length === 0) {
               alert("더 이상 불러올 주제가 없습니다.");
               $("#load-more-btn").hide();
               return;
             }
-
             newTopics.forEach((topic) => {
               let total = topic.left_count + topic.right_count;
-              let maxVal = total > 0 ? total : 1;
-              
+              let display_val = total > 0 ? (topic.left_count / total * 100) : 50;
+              let leftSelected = topic.user_voted === 'left' ? 'selected' : '';
+              let rightSelected = topic.user_voted === 'right' ? 'selected' : '';
+              let btnText = topic.user_voted ? '이미 투표 완료' : '투표 확정하기';
+
               let tempHtml = `
                 <div class="topic-box">
                   <div class="hero">
                     <div class="hero-body">
                       <div class="container has-text-centered">
                         <div class="battle">
-                          <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
+                          <div id="btn-left-${topic._id}" class="box ${leftSelected}" onclick="selectOption('${topic._id}', 'left')">
                             <div class="option"><div class="option-name">${topic.left_item}</div></div>
                           </div>
-                          <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
+                          <div id="btn-right-${topic._id}" class="box ${rightSelected}" onclick="selectOption('${topic._id}', 'right')">
                             <div class="option"><div class="option-name">${topic.right_item}</div></div>
                           </div>
                         </div>
-                        <progress id="progress-${topic._id}" class="progress is-large" value="0" max="${maxVal}" 
-                          data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
-                        <p>left: ${topic.left_count}</p>
-                        <p>right: ${topic.right_count}</p>
+                        <progress id="progress-${topic._id}" class="progress is-large" value="${display_val}" max="100"></progress>
+                        <div class="is-flex is-justify-content-space-between px-6" style="margin-bottom: 10px;">
+                          <p>Left: <b>${topic.left_count}</b></p>
+                          <p>Right: <b>${topic.right_count}</b></p>
+                        </div>
                         <div style="text-align: center">
                           <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">
-                            이 항목으로 투표 확정
+                            ${btnText}
                           </button>
                         </div>
                         <div class="topic_info">
@@ -340,63 +316,10 @@
                     </div>
                   </div>
                 </div>`;
-
               $("#topic-list").append(tempHtml);
             });
-
             currentCount += newTopics.length;
             attachToggleEvents();
-          },
-        });
-      }
-
-      function selectOption(topicId, option) {
-        selectedStorage[topicId] = option;
-        $(`#btn-left-${topicId}`).removeClass("selected");
-        $(`#btn-right-${topicId}`).removeClass("selected");
-
-        $(`#progress-${topicId}`).removeClass("is-rtl");
-
-        const progressBar = $(`#progress-${topicId}`);
-
-        if (option === "left") {
-          $(`#btn-left-${topicId}`).addClass("selected");
-          const leftCount = progressBar.data("left-count");
-          progressBar.attr("value", leftCount);
-        } else {
-          $(`#btn-right-${topicId}`).addClass("selected");
-          progressBar.addClass("is-rtl");
-          const rightCount = progressBar.data("right-count");
-          progressBar.attr("value", rightCount);
-        }
-
-        progressBar.attr(
-          "max",
-          progressBar.data("left-count") + progressBar.data("right-count") || 1
-        );
-
-        let confirmBtn = $(`#confirm-${topicId}`);
-        confirmBtn.prop("disabled", false);
-        confirmBtn.css({
-          "background-color": "#28a745",
-          color: "white",
-          cursor: "pointer",
-        });
-      }
-
-      function confirmVote(topicId) {
-        let selectedOption = selectedStorage[topicId];
-        if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
-
-        $.ajax({
-          type: "POST",
-          url: "/api/vote",
-          data: { topic_id: topicId, option: selectedOption },
-          success: function (response) {
-            alert(response.msg);
-            if (response.result === "success") {
-              window.location.reload();
-            }
           },
         });
       }
@@ -404,7 +327,6 @@
       function comment(topicId) {
         let content = $(`#input-${topicId}`).val();
         if (content === "") return alert("내용을 입력해주세요.");
-
         $.ajax({
           type: "POST",
           url: "/api/comment",
@@ -417,8 +339,7 @@
       }
 
       function logout() {
-        document.cookie =
-          "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         window.location.href = "/login";
       }
 
@@ -426,27 +347,11 @@
         $(".comment-toggle-btn").off("click").on("click", function () {
           const topicId = $(this).data("topic-id");
           const commentBox = $(`#comment_box_${topicId}`);
-          const listContainer = commentBox.find('.comments-list');
-          if (commentBox.is(":hidden") && listContainer.is(":empty")) {
-            get_comments(topicId);
-          }
           commentBox.toggle();
           $(this).text(function (i, text) {
             return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
           });
         });
-      }
-
-      function get_comments(topicId) {
-        $.ajax({
-          type: "GET",
-          url: "/api/get_comments",
-          data: { topic_id: topicId },
-          success: function (response) {
-            let comments = response.comments;
-            console.log(comments);
-          },
-        })
       }
 
       $(document).ready(function() {
