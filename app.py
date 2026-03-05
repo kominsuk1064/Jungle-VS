@@ -32,7 +32,7 @@ def home():
         
         now = datetime.datetime.now()
         db.topics.update_many(
-            {"trash": True, "created_at": {"$lte": now - datetime.timedelta(seconds=30)}},
+            {"trash": True, "expire_at": {"$lte": datetime.datetime.now()}},
             {"$set": {"trash": False}}
         )
 
@@ -56,7 +56,6 @@ def home():
         live_topics = []
         for t in topics:
             t['_id'] = str(t['_id'])
-            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30) 
             t['user_voted'] = voted_dict.get(t['_id'], None)
 
             comments = list(db.comments.find({'topic_id': t['_id']}))
@@ -82,7 +81,6 @@ def end_vote_page():
         
         for t in topics:
             t['_id'] = str(t['_id'])
-            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)
             comments = list(db.comments.find({'topic_id': t['_id']}))
             for c in comments:
                 c['_id'] = str(c['_id'])
@@ -126,7 +124,6 @@ def get_more_topics():
         live_topics = []
         for t in topics:
             t['_id'] = str(t['_id'])
-            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)
             t['user_voted'] = voted_dict.get(t['_id'], None)
             live_topics.append(t)
 
