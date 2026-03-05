@@ -48,6 +48,22 @@ def home():
         return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type)
     except:
         return redirect(url_for('login'))
+    
+@app.route('/end_vote_page')
+def end_vote_page():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
+        
+        topics = list(db.topics.find({"trash":False}).sort('created_at', -1).limit(10))
+        
+        for t in topics:
+            t['_id'] = str(t['_id'])
+            
+        return render_template('end_vote_page.html', user_info=user_info, topics=topics)
+    except:
+        return redirect(url_for('login'))
 
 @app.route('/api/get_topics', methods=['GET'])
 def get_more_topics():
@@ -83,7 +99,8 @@ def create_topic():
             'left_count': 0,
             'right_count': 0,
             'created_by': payload['email'],
-            'created_at': datetime.datetime.now()
+            'created_at': datetime.datetime.now(),
+            'trash': True
         })
         return jsonify({'result': 'success', 'msg': '주제가 생성되었습니다!'})
     except:
@@ -172,10 +189,71 @@ def post_comment():
         return jsonify({'result': 'success'})
     except:
         return jsonify({'msg': '로그인 필요'}), 403
+
     
 @app.route('/make_topic_page')
 def make_topic_page():
     return render_template('make_topic.html')
 
 if __name__ == '__main__':
+    if db.topics.count_documents({'left_item': '전공자'}) == 0:
+        db.topics.insert_one({
+            'left_item': '전공자', 
+            'right_item': '비전공자',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+        
+    if db.topics.count_documents({'left_item': 'Windows'}) == 0:
+        db.topics.insert_one({
+            'left_item': 'Windows', 
+            'right_item': 'Mac',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+    
+    if db.topics.count_documents({'left_item': '개발자'}) == 0:
+        db.topics.insert_one({
+            'left_item': '개발자', 
+            'right_item': '비개발자',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+        
+    if db.topics.count_documents({'left_item': 'Android'}) == 0:
+        db.topics.insert_one({
+            'left_item': 'Android', 
+            'right_item': 'iOS',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+
+    if db.topics.count_documents({'left_item': '혼자 몰입'}) == 0:
+        db.topics.insert_one({
+            'left_item': '혼자 몰입', 
+            'right_item': '같이 협업',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+        
+    if db.topics.count_documents({'left_item': '프론트엔드'}) == 0:
+        db.topics.insert_one({
+            'left_item': '프론트엔드', 
+            'right_item': '백엔드',
+            'left_count': 0, 
+            'right_count': 0,
+            'created_at': datetime.datetime.now(),
+            'trash': True
+        })
+        
     app.run('0.0.0.0', port=5001, debug=True)
