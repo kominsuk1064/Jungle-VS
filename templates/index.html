@@ -240,7 +240,7 @@
             </button>
 
             <div class="is-flex is-justify-content-space-between">
-              <p> {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
+              <p> {{ topic.expire_at.strftime("%m월 %d일 %H시 %M분") }}에 만료 </p>
               <p>총 투표수: {{ total }}</p>
               <p class="made-by">made-by: {{ topic.created_by }}</p>
             </div>
@@ -336,7 +336,7 @@
             let btnDisabled = topic.user_voted ? 'disabled' : 'disabled';
 
             let expire = new Date(topic.expire_at);
-            let timeStr = expire.getHours() + "시 " + expire.getMinutes() + "분";
+            let timeStr = expire.getMonth() + "월 " + expire.getDay() + "일 " + expire.getHours() + "시 " + expire.getMinutes() + "분";
 
             let tempHtml = `
                     <div class="topic-box has-background-success-light">
@@ -372,7 +372,7 @@
                             </button>
 
                             <div class="is-flex is-justify-content-space-between">
-                              <p>${timeStr} 에 만료</p>
+                              <p>${timeStr}에 만료</p>
                               <p>총 투표수: ${total}</p>
                               <p class="made-by">made-by: ${topic.created_by}</p>
                             </div>
