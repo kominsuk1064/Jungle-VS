@@ -131,13 +131,13 @@
             <div class="battle">
               <div class="box {% if topic.left_count > topic.right_count %}selected{% endif %}">
                 <div class="option">
-                  <div class="option-name">{{ topic.left_item }}</div>
+                  <div class="option-name">{{ topic.left_item }} ({{ topic.left_count }})</div>
                 </div>
               </div>
 
               <div class="box {% if topic.left_count < topic.right_count %}selected{% endif %}">
                 <div class="option">
-                  <div class="option-name">{{ topic.right_item }}</div>
+                  <div class="option-name">{{ topic.right_item }} ({{ topic.right_count }})</div>
                 </div>
               </div>
             </div>
@@ -146,11 +146,6 @@
             <progress id="progress-{{topic._id}}" class="progress is-large"
               value="{% if total == 0 %}1{% else %}{{ topic.left_count }}{% endif %}"
               max="{% if total == 0 %}2{% else %}{{ total }}{% endif %}"></progress>
-
-            <div class="is-flex is-justify-content-space-between">
-              <p>left: {{ topic.left_count }}</p>
-              <p>right: {{ topic.right_count }}</p>
-            </div>
 
             <button class="button has-text-centered m-5" disabled style="background-color: #ccc; cursor: default">
               투표 종료됨 (결과 발표)

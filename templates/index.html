@@ -218,14 +218,14 @@
               <div id="btn-left-{{topic._id}}" class="box {% if topic.user_voted == 'left' %}selected{% endif %}"
                 onclick="selectOption('{{ topic._id }}', 'left')">
                 <div class="option">
-                  <div class="option-name">{{ topic.left_item }}</div>
+                  <div class="option-name">{{ topic.left_item }} ({{ topic.left_count }})</div>
                 </div>
               </div>
 
               <div id="btn-right-{{topic._id}}" class="box {% if topic.user_voted == 'right' %}selected{% endif %}"
                 onclick="selectOption('{{topic._id}}', 'right')">
                 <div class="option">
-                  <div class="option-name">{{ topic.right_item }}</div>
+                  <div class="option-name">{{ topic.right_item }} ({{ topic.right_count }})</div>
                 </div>
               </div>
             </div>
@@ -236,10 +236,7 @@
               max="{% if total == 0 %}2{% else %}{{ total }}{% endif %}" data-left-count="{{ topic.left_count }}"
               data-right-count="{{ topic.right_count }}"></progress>
 
-            <div class="is-flex is-justify-content-space-between">
-              <p id="label-left-{{topic._id}}">left: {{ topic.left_count }}</p>
-              <p id="label-right-{{topic._id}}">right: {{ topic.right_count }}</p>
-            </div>
+            
 
             <button id="confirm-{{ topic._id }}" class="button has-text-centered m-5"
               onclick="confirmVote('{{ topic._id }}')" {% if topic.user_voted %} disabled
@@ -356,13 +353,13 @@
                             <div class="battle ">
                               <div id="btn-left-${topic._id}" class="box ${leftClass}" onclick="selectOption('${topic._id}', 'left')">
                                 <div class="option">
-                                  <div class="option-name">${topic.left_item}</div>
+                                  <div class="option-name">${topic.left_item}(${ topic.right_count })</div>
                                 </div>
                               </div>
 
                               <div id="btn-right-${topic._id}" class="box ${rightClass}" onclick="selectOption('${topic._id}', 'right')">
                                 <div class="option">
-                                  <div class="option-name">${topic.right_item}</div>
+                                  <div class="option-name">${topic.right_item}(${ topic.right_count })</div>
                                 </div>
                               </div>
                             </div>
@@ -371,10 +368,7 @@
                               max="${barMax}"
                               data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
 
-                            <div class="is-flex is-justify-content-space-between">
-                              <p id="label-left-${topic._id}">left: ${topic.left_count}</p>
-                              <p id="label-right-${topic._id}">right: ${topic.right_count}</p>
-                            </div>
+                            
 
                             <button id="confirm-${topic._id}" class="button has-text-centered m-5"
                               onclick="confirmVote('${topic._id}')" ${btnDisabled} style="${btnStyle}">
