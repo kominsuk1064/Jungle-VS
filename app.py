@@ -60,21 +60,18 @@ def home():
             if t['trash']:
                 t['_id'] = str(t['_id'])
                 live_topics.append(t)
-        
 
-        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
-    except:
-        return redirect(url_for('login'))
             # 댓글 조회
             comments = list(db.comments.find({'topic_id': t['_id']}))
             for c in comments:
                 c['_id'] = str(c['_id'])
-            t['comments'] = comments
-        
-        return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type,view_now=view_type)
+            t['comments'] = comments      
+
+        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
     except Exception as e:
        print(e)
-    return redirect(url_for('login'))
+    return redirect(url_for('login'))        
+
     
 @app.route('/end_vote_page')
 def end_vote_page():
