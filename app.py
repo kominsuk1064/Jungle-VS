@@ -30,6 +30,12 @@ def home():
         sort_type = request.args.get('sort', 'newest')
         view_type = request.args.get('view', 'all')
         
+        now = datetime.datetime.now()
+        db.topics.update_many(
+            {"trash": True, "created_at": {"$lte": now - datetime.timedelta(seconds=30)}},
+            {"$set": {"trash": False}}
+        )
+
         query = {"trash": True}
         if view_type == 'mine':
             query["created_by"] = user_email
@@ -44,20 +50,13 @@ def home():
         ]
         topics = list(db.topics.aggregate(pipeline))
         
-        # 현재 유저의 투표 기록을 가져와서 딕셔너리화 (ID: 선택항목)
         user_votes = list(db.votes.find({"user_email": user_email}))
         voted_dict = {str(v['topic_id']): v['selected'] for v in user_votes}
         
         live_topics = []
-        now = datetime.datetime.now()
-
         for t in topics:
             t['_id'] = str(t['_id'])
-            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)         
-
-            if now >= t['expire_at']: 
-                db.topics.update_one({"_id": ObjectId(t['_id'])}, {"$set": {"trash": False}})
-                continue 
+            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30) 
             t['user_voted'] = voted_dict.get(t['_id'], None)
 
             comments = list(db.comments.find({'topic_id': t['_id']}))
@@ -72,6 +71,28 @@ def home():
         print(f"Error: {e}")
         return redirect(url_for('login'))
 
+@app.route('/end_vote')
+def end_vote_page():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
+        
+        topics = list(db.topics.find({"trash": False}).sort('created_at', -1).limit(10))
+        
+        for t in topics:
+            t['_id'] = str(t['_id'])
+            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)
+            comments = list(db.comments.find({'topic_id': t['_id']}))
+            for c in comments:
+                c['_id'] = str(c['_id'])
+            t['comments'] = comments
+
+        return render_template('end_vote_page.html', user_info=user_info, topics=topics)
+    except Exception as e:
+        print(f"Error: {e}")
+        return redirect(url_for('login'))
+
 @app.route('/api/get_topics', methods=['GET'])
 def get_more_topics():
     token_receive = request.cookies.get('mytoken')
@@ -82,8 +103,9 @@ def get_more_topics():
         skip_receive = int(request.args.get('skip', 0))
         sort_type = request.args.get('sort', 'newest')
         view_type = request.args.get('view', 'all')
+        is_trash = request.args.get('trash', 'true').lower() == 'true'
         
-        query = {"trash": True}
+        query = {"trash": is_trash}
         if view_type == 'mine':
             query["created_by"] = user_email
             
@@ -121,6 +143,10 @@ def vote():
         topic_id = request.form['topic_id']
         option = request.form['option']
         
+        topic = db.topics.find_one({'_id': ObjectId(topic_id)})
+        if not topic.get('trash'):
+            return jsonify({'result': 'fail', 'msg': '이미 종료된 투표입니다.'})
+
         existing_vote = db.votes.find_one({'user_email': user_email, 'topic_id': topic_id})
         if existing_vote:
             return jsonify({'result': 'fail', 'msg': '이미 투표에 참여하셨습니다.'})
@@ -154,7 +180,6 @@ def create_topic():
             'right_count': 0,
             'created_by': payload['email'],
             'created_at': datetime.datetime.now(),
-            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
         return jsonify({'result': 'success', 'msg': '주제가 생성되었습니다!'})
@@ -214,7 +239,12 @@ def post_comment():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        comment_doc = {'user_email': payload['email'], 'topic_id': request.form['topic_id'], 'content': request.form['comment'], 'created_at': datetime.datetime.now()}
+        comment_doc = {
+            'user_email': payload['email'], 
+            'topic_id': request.form['topic_id'], 
+            'content': request.form['comment'], 
+            'created_at': datetime.datetime.now()
+        }
         db.comments.insert_one(comment_doc)
         comment_doc['_id'] = str(comment_doc.get('_id', ''))
         return jsonify({'result': 'success', 'comment': comment_doc})

@@ -13,20 +13,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <style>
-    /* 전체 페이지 폰트 적용 */
     body {
       font-family: 'Noto Sans KR', sans-serif;
       background: linear-gradient(135deg, #ebfffc, #ebfffa, #00d1b2, #effaf5);
     }
 
-    /* "실시간 투표 리스트" 제목 */
     .title {
       font-weight: 700;
       color: #2c3e50;
       margin-bottom: 1.5rem;
     }
 
-    /* "1234", "134" 같은 선택지 텍스트 */
     .option-name {
       font-weight: 500;
       font-size: 1.1rem;
@@ -84,15 +81,13 @@
       width: 20%;
     }
 
-    /* --- 투표율 바 핵심 수정 CSS --- */
     .progress {
       width: 80%;
       margin: 1rem auto;
       background-color: #ff3860;
-      /* 기본 배경: 오른쪽(Right) 색상 - 빨강 */
     }
 
-    /* 왼쪽(Left) 채워지는 색상 - 파랑 */
+
     .progress::-webkit-progress-value {
       background-color: #209cee;
       transition: width 0.3s ease;
@@ -160,6 +155,9 @@
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
+            <button class="button is-link is-outlined" onclick="location.href = '/end_vote'">
+              <strong>종료된 투표함</strong>
+            </button>
             <button class="button is-success is-outlined" onclick="location.href = '/make_topic_page'">
               <strong>+ 주제 만들기</strong>
             </button>
@@ -328,11 +326,9 @@
 
           newTopics.forEach((topic) => {
             let total = topic.left_count + topic.right_count;
-            // 0:0 처리 적용
             let barVal = total === 0 ? 1 : topic.left_count;
             let barMax = total === 0 ? 2 : total;
 
-            // 유저 투표 여부 처리
             let leftClass = topic.user_voted === 'left' ? 'selected' : '';
             let rightClass = topic.user_voted === 'right' ? 'selected' : '';
             let btnText = topic.user_voted ? '투표 완료' : '이 항목으로 투표 확정';
@@ -414,7 +410,6 @@
     }
 
     function selectOption(topicId, option) {
-      // 이미 투표 완료된 버튼이면 클릭 무시
       if ($(`#confirm-${topicId}`).text().trim() === "투표 완료") return;
 
       selectedStorage[topicId] = option;
