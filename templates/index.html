@@ -129,7 +129,7 @@
   </style>
 </head>
 
-<body class="">
+<body>
   <nav class="navbar navbar-transparent" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
@@ -138,6 +138,11 @@
             <b>{{ user_info.nickname }}</b>님 접속 중
           </span>
         </div>
+      </div>
+      <div class="navbar-item is-expanded is-flex is-justify-content-center ml-6">
+        <figure class="image ml-6" >
+          <img src="{{ url_for('static', filename='logo.png') }}" style="width:250px; min-height:50px;" alt="JungleVS">
+        </figure>
       </div>
 
       <div class="navbar-end">
@@ -208,8 +213,8 @@
             </button>
 
             <div class="is-flex is-justify-content-space-between">
-              <p > {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
-              <p >총 투표수: {{ topic.left_count + topic.right_count }}</p>
+              <p> {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
+              <p>총 투표수: {{ topic.left_count + topic.right_count }}</p>
               <p class="made-by">made-by: {{ topic.created_by }}</p>
             </div>
 
@@ -223,8 +228,8 @@
 
             <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
               <div class="container">
-                <input class="input is-success is-rounded" type="text" id="input-{{ topic._id }}" placeholder="의견을 입력하세요"
-                  style="width: 80%; padding: 5px" />
+                <input class="input is-success is-rounded" type="text" id="input-{{ topic._id }}"
+                  placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
                 <button class="button is-success is-rounded" onclick="comment('{{ topic._id }}')">등록</button>
               </div>
               <hr />
