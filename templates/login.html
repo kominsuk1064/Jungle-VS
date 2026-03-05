@@ -1,52 +1,110 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Jungle VS | 로그인</title>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  </head>
-  <body>
-    <h1>Login</h1>
-    <div>
-      <label for="uid">Username:</label>
-      <input type="text" id="uid" required /><br /><br />
-      <label for="upw">Password:</label>
-      <input type="password" id="upw" required /><br /><br />
-      <button onclick="doLogin()">Login</button>
-      <button onclick="location.href='/signup'">Sign Up</button>
-    </div>
 
-    <script>
-      function doLogin() {
-        let username = $('#uid').val()
-        let password = $('#upw').val()
-      
-        if (username == '' || password == '') {
-          alert('아이디와 비밀번호를 입력해주세요.')
-          return
-        }
-      
-        $.ajax({
-          type: 'POST',
-          url: '/api/login',
-          data: {
-            username: username,
-            password: password
-          },
-          success: function (response) {
-            if (response['result'] == 'success') {
-              document.cookie = 'mytoken=' + response['token'] + '; path=/'
-              window.location.href = '/'
-            } else {
-              alert(response['msg'])
-            }
-          },
-          error: function (error) {
-            console.log(error)
-            alert('서버 통신 에러가 발생했습니다.')
-          }
-        })
+<head>
+  <meta charset="UTF-8" />
+  <title>Jungle VS | 로그인</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    .animated-bg {
+      background: linear-gradient(-45deg,
+          #00d1b2,
+          #ebfffc,
+          #ebfffa,
+          #00d1b2,
+          #effaf5);
+      background-size: 400% 400%;
+      animation: gradientMove 10s ease infinite;
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
       }
-    </script>
-  </body>
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+
+    <section class="hero is-fullheight ">
+
+      <div class="animated-bg hero-body is-flex is-justify-content-center ">
+        <figure class="image ">
+          <img src="{{ url_for('static', filename='junglevs.png') }}" style="width:1000px; height:800px;"
+            alt="JungleVS">
+        </figure>
+        <div class="box has-text-centered has-background-success-light" style="height: 400px; min-width: 400px">
+          <h1 class="title is-1 m-5">로그인</h1>
+          <div class="field mb-6">
+            <div class="control mb-4">
+              <input class="input" type="text" id="uid" placeholder="Email" required>
+            </div>
+            <div class="control">
+              <input class="input mb-5" type="password" id="upw" placeholder="Password" required>
+            </div>
+            <div class="field mt-5">
+              <div class="control">
+                <button onclick="doLogin()" class="button is-success is-fullwidth mb-5 ">로그인</button>
+              </div>
+              <div class="control">
+                <button onclick="location.href='/signup'"
+                  class="button is-success is-outlined is-fullwidth ">회원가입</button>
+              </div>
+            </div>
+            <div class="field">
+              
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function doLogin() {
+      let username = $('#uid').val()
+      let password = $('#upw').val()
+
+      if (username == '' || password == '') {
+        alert('아이디와 비밀번호를 입력해주세요.')
+        return
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: '/api/login',
+        data: {
+          username: username,
+          password: password
+        },
+        success: function (response) {
+          if (response['result'] == 'success') {
+            document.cookie = 'mytoken=' + response['token'] + '; path=/'
+            window.location.href = '/'
+          } else {
+            alert(response['msg'])
+          }
+        },
+        error: function (error) {
+          console.log(error)
+          alert('서버 통신 에러가 발생했습니다.')
+        }
+      })
+    }
+  </script>
+</body>
+
 </html>
