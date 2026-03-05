@@ -50,7 +50,7 @@ def home():
         # 만료시간이 지났다면 DB에서 Trash를 False로 업데이트
         # attach recent comments to each topic
         for t in topics:
-            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=3000)         
 
             if datetime.datetime.now() >= t['expire_at'] : 
                 t['trash'] = False
