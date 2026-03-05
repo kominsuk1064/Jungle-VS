@@ -231,29 +231,44 @@
                     newTopics.forEach((topic) => {
                         let tempHtml = `
                     <div class="topic-box">
-                        <h2 style="text-align: center;">${topic.left_item} VS ${topic.right_item}</h2>
-                        
-                        <div style="display: flex; justify-content: center;">
-                            <button id="btn-left-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'left')">
-                                ${topic.left_item} (${topic.left_count})
-                            </button>
-                            <button id="btn-right-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'right')">
-                                ${topic.right_item} (${topic.right_count})
-                            </button>
+                  <div class="hero">
+                    <div class="hero-body">
+                      <div class="container has-text-centered">
+                        <div class="battle">
+                          <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
+                            <div class="option"><div class="option-name">${topic.left_item}</div></div>
+                          </div>
+                          <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
+                            <div class="option"><div class="option-name">${topic.right_item}</div></div>
+                          </div>
                         </div>
-
-                        <div style="text-align: center;">
-                            <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed;">
-                                이 항목으로 투표 확정
-                            </button>
+                        <progress id="progress-${topic._id}" class="progress is-large" value="0" max="${maxVal}" 
+                          data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
+                        <p>left: ${topic.left_count}</p>
+                        <p>right: ${topic.right_count}</p>
+                        <div style="text-align: center">
+                          <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">
+                            이 항목으로 투표 확정
+                          </button>
                         </div>
-
+                        <div class="topic_info">
+                          <p>총 투표수: ${total}</p>
+                          <p>made-by: ${topic.created_by}</p>
+                        </div>
                         <hr />
-                        <div style="margin-top: 15px; text-align: center;">
-                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 70%; padding: 5px;" />
-                            <button onclick="comment('${topic._id}')">등록</button>
+                        <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                          <button class="comment-toggle-btn button" data-topic-id="${topic._id}">Show Comments</button>
                         </div>
-                    </div>`;
+                        <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
+                          <div class="container">
+                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
+                            <button onclick="comment('${topic._id}')">등록</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>`;
 
                         $("#topic-list").append(tempHtml);
                     });

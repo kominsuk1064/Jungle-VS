@@ -96,9 +96,9 @@
         display: inline-block;
       }
 
-      /* 정렬 탭 스타일 추가 */
+      /* 정렬 및 필터 탭 스타일 */
       .sort-container {
-        margin: 20px 0;
+        margin: 10px 0;
       }
     </style>
   </head>
@@ -116,11 +116,28 @@
 
     <h1 style="text-align: center; margin-top: 20px" class="title">실시간 투표 리스트</h1>
 
+    <div class="tabs is-toggle is-centered is-small sort-container">
+      <ul>
+        <li class="{% if view_now != 'mine' %}is-active{% endif %}">
+          <a href="/?view=all&sort={{ sort_now }}">전체 보기</a>
+        </li>
+        <li class="{% if view_now == 'mine' %}is-active{% endif %}">
+          <a href="/?view=mine&sort={{ sort_now }}">내 토픽만 보기</a>
+        </li>
+      </ul>
+    </div>
+
     <div class="tabs is-centered sort-container">
       <ul>
-        <li class="{% if sort_now == 'newest' %}is-active{% endif %}"><a href="/?sort=newest">최신순</a></li>
-        <li class="{% if sort_now == 'oldest' %}is-active{% endif %}"><a href="/?sort=oldest">오래된순</a></li>
-        <li class="{% if sort_now == 'popular' %}is-active{% endif %}"><a href="/?sort=popular">인기순</a></li>
+        <li class="{% if sort_now == 'newest' %}is-active{% endif %}">
+          <a href="/?view={{ view_now }}&sort=newest">최신순</a>
+        </li>
+        <li class="{% if sort_now == 'oldest' %}is-active{% endif %}">
+          <a href="/?view={{ view_now }}&sort=oldest">오래된순</a>
+        </li>
+        <li class="{% if sort_now == 'popular' %}is-active{% endif %}">
+          <a href="/?view={{ view_now }}&sort=popular">인기순</a>
+        </li>
       </ul>
     </div>
 
@@ -151,7 +168,7 @@
                   </div>
                 </div>
               </div>
-
+              
               <progress
                 id="progress-{{topic._id}}"
                 class="progress is-large"
@@ -211,9 +228,15 @@
                 </div>
                 <hr />
 
-                <div class="comment_container">
-                  <p>의견을 남겨주세요!</p>
-                </div>
+                <div class="comments-list">
+                  {% for comment in topic.comments %}
+                    <div class="comment_container">
+                      <p><strong>{{ comment.user_email }}</strong></p>
+                      <p>{{ comment.content }}</p>
+                    </div>
+                    <hr />
+                  {% endfor %}
+              </div>
               </div>
             </div>
           </div>
@@ -236,9 +259,9 @@
       let currentCount = 10;
       let selectedStorage = {};
 
-      // 현재 URL에서 정렬 기준 추출
       const urlParams = new URLSearchParams(window.location.search);
       let currentSort = urlParams.get('sort') || 'newest';
+      let currentView = urlParams.get('view') || 'all';
 
       window.onpageshow = function (event) {
         if (
@@ -261,7 +284,8 @@
           url: "/api/get_topics",
           data: { 
             skip: currentCount,
-            sort: currentSort // 더보기 시 현재 정렬 기준 전송
+            sort: currentSort,
+            view: currentView
           },
           success: function (response) {
             let newTopics = response.topics;
@@ -402,11 +426,27 @@
         $(".comment-toggle-btn").off("click").on("click", function () {
           const topicId = $(this).data("topic-id");
           const commentBox = $(`#comment_box_${topicId}`);
+          const listContainer = commentBox.find('.comments-list');
+          if (commentBox.is(":hidden") && listContainer.is(":empty")) {
+            get_comments(topicId);
+          }
           commentBox.toggle();
           $(this).text(function (i, text) {
             return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
           });
         });
+      }
+
+      function get_comments(topicId) {
+        $.ajax({
+          type: "GET",
+          url: "/api/get_comments",
+          data: { topic_id: topicId },
+          success: function (response) {
+            let comments = response.comments;
+            console.log(comments);
+          },
+        })
       }
 
       $(document).ready(function() {
