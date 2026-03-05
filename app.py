@@ -269,6 +269,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
         
@@ -279,6 +280,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
 
@@ -289,6 +291,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
 
@@ -299,6 +302,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
 
@@ -309,6 +313,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
 
@@ -319,6 +324,7 @@ if __name__ == '__main__':
             'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': False
         })
     app.run('0.0.0.0', port=5001, debug=True)
