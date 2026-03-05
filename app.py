@@ -46,17 +46,20 @@ def home():
         ]
         topics = list(db.topics.aggregate(pipeline))
         
+        # attach recent comments to each topic
         for t in topics:
             t['_id'] = str(t['_id'])
-            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
-            
-        return render_template('index.html', 
-                               user_info=user_info, 
-                               topics=topics, 
-                               sort_now=sort_type, 
-                               view_now=view_type)
+            # 만든지 30초 후에 만료
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
+            # 댓글 조회
+            comments = list(db.comments.find({'topic_id': t['_id']}))
+            for c in comments:
+                c['_id'] = str(c['_id'])
+            t['comments'] = comments
+        
+        return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type,view_now=view_type)
     except Exception as e:
-        print(e)
+       print(e)
         return redirect(url_for('login'))
     
 @app.route('/end_vote_page')
@@ -212,6 +215,14 @@ def post_comment():
 def make_topic_page():
     return render_template('make_topic.html')
 
+@app.route('/api/get_comments', methods=['GET'])
+def get_comments():
+    topic_id = request.args.get('topic_id')
+    comments = list(db.comments.find({'topic_id': topic_id}))    # convert ObjectIds to strings for JSON serialization
+    for c in comments:
+        c['_id'] = str(c['_id'])    
+    return jsonify({'result': 'success', 'comments': comments})
+
 if __name__ == '__main__':
     if db.topics.count_documents({'left_item': '전공자'}) == 0:
         db.topics.insert_one({
@@ -270,7 +281,7 @@ if __name__ == '__main__':
             'left_count': 0, 
             'right_count': 0,
             'created_at': datetime.datetime.now(),
-            'trash': True
+            'trash': False
         })
         
     app.run('0.0.0.0', port=5001, debug=True)
