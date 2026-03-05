@@ -69,6 +69,8 @@ def signup_post():
     if password != rePassword :
         return jsonify({'result': 'fail', 'msg': '비밀번호가 일치하지 않습니다!'})
     
+    if len(password) < 8 : 
+        return jsonify({'result':'fail', 'msg':'비밀번호는 8자 이상이어야합니다.'})
 
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     db.users.insert_one({
