@@ -217,7 +217,7 @@
         function loadMore() {
             $.ajax({
                 type: "GET",
-                url: "/api/get_topics",
+                url: "/api/get_end_topics",
                 data: { skip: currentCount },
                 success: function (response) {
                     let newTopics = response.topics;
