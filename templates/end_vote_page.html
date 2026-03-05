@@ -15,7 +15,8 @@
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: linear-gradient(135deg, #ebfffc, #ebfffa, #00d1b2, #effaf5);
+      background: linear-gradient(135deg, #ebfffc,#e2f3f0, #d8e7e5, #cfdbd9,#c6cecd, #bdc2c1, #b3b6b6,#aaaaaa);
+      min-height: 100vh;
     }
 
     .title {
@@ -89,6 +90,11 @@
 <body>
   <nav class="navbar navbar-transparent" role="navigation" aria-label="main navigation">
     <div class="container">
+      <div class="navbar-item ">
+        <figure class="image">
+          <img src="{{ url_for('static', filename='logo.png') }}" style="width:250px; min-height:50px;" alt="JungleVS">
+        </figure>
+      </div>
       <div class="navbar-brand">
         <div class="navbar-item">
           <span class="tag is-primary is-medium">
@@ -96,12 +102,6 @@
           </span>
         </div>
       </div>
-      <div class="navbar-item is-expanded is-flex is-justify-content-center ml-6">
-        <figure class="image ml-6">
-          <img src="{{ url_for('static', filename='logo.png') }}" style="width:250px; min-height:50px;" alt="JungleVS">
-        </figure>
-      </div>
-
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
@@ -117,7 +117,7 @@
 
   <section class="section pb-0">
     <div class="container">
-      <h1 class="title has-text-centered has-text-success is-2 ">종료된 투표 리스트</h1>
+      <h1 class="title has-text-centered is-2 ">종료된 투표 리스트</h1>
       <p class="has-text-centered mb-5">이 투표들은 만료되어 더 이상 참여할 수 없습니다.</p>
     </div>
   </section>
