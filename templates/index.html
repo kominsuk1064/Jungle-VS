@@ -147,17 +147,18 @@
 <body>
   <nav class="navbar navbar-transparent" role="navigation" aria-label="main navigation">
     <div class="container">
+      <div class="navbar-item ">
+        <figure class="image">
+          <img src="{{ url_for('static', filename='logo.png') }}" style="width:250px; min-height:50px;" alt="JungleVS">
+        </figure>
+      </div>
+      
       <div class="navbar-brand">
         <div class="navbar-item">
           <span class="tag is-primary is-medium">
             <b>{{ user_info.nickname }}</b>님 접속 중
           </span>
         </div>
-      </div>
-      <div class="navbar-item is-expanded is-flex is-justify-content-center ml-6">
-        <figure class="image ml-6">
-          <img src="{{ url_for('static', filename='logo.png') }}" style="width:250px; min-height:50px;" alt="JungleVS">
-        </figure>
       </div>
 
       <div class="navbar-end">
@@ -527,7 +528,7 @@
               list.append(`<div><p><strong>${comment.user_email}</strong></p><p>${comment.content}</p></div>`);
             });
           } else {
-            list.append("<p>아직 의견이 없습니다. 첫 번째로 의견을 남겨보세요!</p>");
+          
           }
         },
       });
