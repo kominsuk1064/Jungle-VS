@@ -11,14 +11,12 @@ SECRET_KEY = 'JUNGLE_SECRET_6'
 client = MongoClient('mongodb://localhost:27017/')
 db = client.dbjungle
 
-# 정렬 쿼리를 생성하는 헬퍼 함수
 def get_sort_query(sort_type):
     if sort_type == 'oldest':
         return [('created_at', 1)]
     elif sort_type == 'popular':
-        # 투표 합계(left_count + right_count) 기준 내림차순, 같으면 최신순
         return [('total_count', -1), ('created_at', -1)]
-    else:  # newest 또는 기본값
+    else:
         return [('created_at', -1)]
 
 @app.route('/')
@@ -28,26 +26,52 @@ def home():
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
         
-        # 정렬 기준 파라미터 (기본값: newest)
+        # 파라미터 읽기
         sort_type = request.args.get('sort', 'newest')
+        view_type = request.args.get('view', 'all')
+        
+        # 필터 조건 설정
+        query = {}
+        if view_type == 'mine':
+            query = {"created_by": payload['email']}
+            
         sort_query = get_sort_query(sort_type)
         
-        # total_count 필드를 임시로 만들어 정렬
+        # 파이프라인
         pipeline = [
+            {"$match": query},
             {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
             {"$sort": dict(sort_query)},
             {"$limit": 10}
         ]
         topics = list(db.topics.aggregate(pipeline))
         
+        live_topics = []
+        # 만료시간이 지났다면 DB에서 Trash를 False로 업데이트
+        # attach recent comments to each topic
         for t in topics:
-            t['_id'] = str(t['_id'])
-            # 만든지 30초 후에 만료
             t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
+
+            if datetime.datetime.now() >= t['expire_at'] : 
+                t['trash'] = False
+                db.topics.update_one({"_id":t['_id']},{"$set":{"trash":False}})
             
-        return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type)
-    except:
-        return redirect(url_for('login'))
+            # Trash 값이 True인 것들만 새로운 리스트에 저장
+            if t['trash']:
+                t['_id'] = str(t['_id'])
+                live_topics.append(t)
+
+            # 댓글 조회
+            comments = list(db.comments.find({'topic_id': t['_id']}))
+            for c in comments:
+                c['_id'] = str(c['_id'])
+            t['comments'] = comments      
+
+        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
+    except Exception as e:
+       print(e)
+    return redirect(url_for('login'))        
+
     
 @app.route('/end_vote_page')
 def end_vote_page():
@@ -65,8 +89,42 @@ def end_vote_page():
     except:
         return redirect(url_for('login'))
 
+#현재 진행중인 투표에서 더보기 버튼
 @app.route('/api/get_topics', methods=['GET'])
 def get_more_topics():
+    token_receive = request.cookies.get('mytoken')
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+
+    skip_receive = int(request.args.get('skip', 0))
+    sort_type = request.args.get('sort', 'newest')
+    view_type = request.args.get('view', 'all')
+    
+    query = {"created_by": payload['email']} if view_type == 'mine' else {}
+    sort_query = get_sort_query(sort_type)
+
+    pipeline = [
+        {"$match": query},
+        {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
+        {"$sort": dict(sort_query)},
+        {"$skip": skip_receive},
+        {"$limit": 10}
+    ]
+    topics = list(db.topics.aggregate(pipeline))
+    live_topics =[]
+    for t in topics:
+        t['_id'] = str(t['_id'])
+        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
+
+        if t['trash']:
+            t['_id'] = str(t['_id'])
+            live_topics.append(t)
+
+    return jsonify({'result': 'success', 'topics': live_topics})
+
+
+# 이미 끝이 난 투표에서 더보기 버튼
+@app.route('/api/get_end_topics', methods=['GET'])
+def get_more_end_topics():
     skip_receive = int(request.args.get('skip', 0))
     sort_type = request.args.get('sort', 'newest')
     limit_count = 10
@@ -79,11 +137,16 @@ def get_more_topics():
         {"$limit": limit_count}
     ]
     topics = list(db.topics.aggregate(pipeline))
-    
+    live_topics =[]
     for t in topics:
         t['_id'] = str(t['_id'])
         t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
-    return jsonify({'result': 'success', 'topics': topics})
+
+        if not t['trash']:
+            t['_id'] = str(t['_id'])
+            live_topics.append(t)
+
+    return jsonify({'result': 'success', 'topics': live_topics})
 
 @app.route('/api/topic', methods=['POST'])
 def create_topic():
@@ -195,6 +258,14 @@ def post_comment():
 def make_topic_page():
     return render_template('make_topic.html')
 
+@app.route('/api/get_comments', methods=['GET'])
+def get_comments():
+    topic_id = request.args.get('topic_id')
+    comments = list(db.comments.find({'topic_id': topic_id}))    # convert ObjectIds to strings for JSON serialization
+    for c in comments:
+        c['_id'] = str(c['_id'])    
+    return jsonify({'result': 'success', 'comments': comments})
+
 if __name__ == '__main__':
     if db.topics.count_documents({'left_item': '전공자'}) == 0:
         db.topics.insert_one({
@@ -253,7 +324,7 @@ if __name__ == '__main__':
             'left_count': 0, 
             'right_count': 0,
             'created_at': datetime.datetime.now(),
-            'trash': True
+            'trash': False
         })
         
     app.run('0.0.0.0', port=5001, debug=True)
