@@ -16,22 +16,15 @@
     /* 전체 페이지 폰트 적용 */
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: linear-gradient(135deg,
-          #ebfffc,
-          #ebfffa,
-          #00d1b2,
-          #effaf5);
+      background: linear-gradient(135deg, #ebfffc, #ebfffa, #00d1b2, #effaf5);
     }
 
-    /* "실시간 투표 리스트" 제목 */
     .title {
       font-weight: 700;
-      /* 굵게 */
       color: #2c3e50;
       margin-bottom: 1.5rem;
     }
 
-    /* "1234", "134" 같은 선택지 텍스트 */
     .option-name {
       font-weight: 500;
       font-size: 1.1rem;
@@ -49,77 +42,41 @@
       border-radius: 10px;
     }
 
-    .nav-bar {
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .vote-btn {
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
     .selected {
       border: 3px solid #007bff !important;
       background-color: #e7f1ff;
-    }
-
-
-    article {
-      width: 70%;
     }
 
     .box {
       width: 40%;
       display: inline-block;
       margin: 0 1rem;
+      cursor: pointer;
     }
 
-    .button.is-primary {
-      width: 75%;
-    }
-
-    .button .is-danger {
-      width: 20%;
-    }
-
+    /* --- 투표율 바 핵심 수정 CSS --- */
     .progress {
       width: 80%;
       margin: 1rem auto;
+      background-color: #ff3860; /* 기본 배경: 오른쪽(Right) 색상 - 빨강 */
     }
 
-    .textarea {
-      width: 70%;
-      margin: 1rem auto;
+    /* 왼쪽(Left) 채워지는 색상 - 파랑 */
+    .progress::-webkit-progress-value {
+      background-color: #209cee;
+      transition: width 0.3s ease;
+    }
+
+    .progress::-moz-progress-bar {
+      background-color: #209cee;
+    }
+
+    .progress::-webkit-progress-bar {
+      background-color: #ff3860;
     }
 
     .comment_box {
       padding: 1rem;
-    }
-
-    .topic_info {
-      display: flex;
-      justify-content: space-between;
-      width: 80%;
-      margin: 1rem auto;
-    }
-
-    .is-rtl {
-      direction: rtl;
-    }
-
-    .comment_container>p {
-      display: inline-block;
-    }
-
-    .sort-container {
-      margin: 20px 0;
     }
 
     .navbar-transparent {
@@ -164,27 +121,21 @@
 
       <div class="tabs is-centered is-boxed mt-5">
         <ul>
-          <li class="{% if sort_now == 'newest' %}is-active{% endif %}">
-            <a href="/?sort=newest">최신순</a>
-          </li>
-          <li class="{% if sort_now == 'oldest' %}is-active{% endif %}">
-            <a href="/?sort=oldest">오래된순</a>
-          </li>
-          <li class="{% if sort_now == 'popular' %}is-active{% endif %}">
-            <a href="/?sort=popular">인기순</a>
-          </li>
+          <li class="{% if sort_now == 'newest' %}is-active{% endif %}"><a href="/?sort=newest">최신순</a></li>
+          <li class="{% if sort_now == 'oldest' %}is-active{% endif %}"><a href="/?sort=oldest">오래된순</a></li>
+          <li class="{% if sort_now == 'popular' %}is-active{% endif %}"><a href="/?sort=popular">인기순</a></li>
         </ul>
       </div>
     </div>
   </section>
 
-  <div id="topic-list" class="">
+  <div id="topic-list">
     {% for topic in topics %}
     <div class="topic-box has-background-success-light">
       <div class="hero">
         <div class="hero-body">
           <div class="container has-text-centered">
-            <div class="battle ">
+            <div class="battle">
               <div id="btn-left-{{topic._id}}" class="box" onclick="selectOption('{{ topic._id }}', 'left')">
                 <div class="option">
                   <div class="option-name">{{ topic.left_item }}</div>
@@ -198,13 +149,15 @@
               </div>
             </div>
 
-            <progress id="progress-{{topic._id}}" class="progress is-large" value="0"
+            <progress id="progress-{{topic._id}}" class="progress is-large" 
+              value="{{ topic.left_count }}" 
               max="{{ topic.left_count + topic.right_count if topic.left_count + topic.right_count > 0 else 1 }}"
-              data-left-count="{{ topic.left_count }}" data-right-count="{{ topic.right_count }}"></progress>
+              data-left-count="{{ topic.left_count }}" data-right-count="{{ topic.right_count }}">
+            </progress>
 
-            <div class="is-flex is-justify-content-space-between">
-              <p>left: {{ topic.left_count }}</p>
-              <p>right: {{ topic.right_count }}</p>
+            <div class="is-flex is-justify-content-space-between px-6">
+              <p id="label-left-{{topic._id}}">left: {{ topic.left_count }}</p>
+              <p id="label-right-{{topic._id}}">right: {{ topic.right_count }}</p>
             </div>
 
             <button id="confirm-{{ topic._id }}" class="button has-text-centered m-5"
@@ -221,9 +174,7 @@
             <hr />
 
             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-              <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
-                Show Comments
-              </button>
+              <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">Show Comments</button>
             </div>
 
             <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
@@ -233,7 +184,6 @@
                 <button class="button is-success is-rounded" onclick="comment('{{ topic._id }}')">등록</button>
               </div>
               <hr />
-
               <div class="comment_container">
                 <p>의견을 남겨주세요!</p>
               </div>
@@ -246,208 +196,166 @@
   </div>
 
   <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-    <button id="load-more-btn" class="button is-success" onclick="loadMore()">
-      더보기 (+10)
-    </button>
+    <button id="load-more-btn" class="button is-success" onclick="loadMore()">더보기 (+10)</button>
   </div>
 
-    <script>
-      let currentCount = 10;
-      let selectedStorage = {};
+  <script>
+    let currentCount = 10;
+    let selectedStorage = {};
 
-      const urlParams = new URLSearchParams(window.location.search);
-      let currentSort = urlParams.get('sort') || 'newest';
-      let currentView = urlParams.get('view') || 'all';
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentSort = urlParams.get('sort') || 'newest';
+    let currentView = urlParams.get('view') || 'all';
 
-      window.onpageshow = function (event) {
-        if (
-          event.persisted ||
-          (window.performance && window.performance.navigation.type == 2)
-        ) {
-          window.location.reload();
-        }
-        let token = document.cookie
-          .split("; ")
-          .find((row) => row.trim().startsWith("mytoken="));
-        if (!token) {
-          window.location.replace("/login");
-        }
-      };
+    window.onpageshow = function (event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type == 2)) {
+        window.location.reload();
+      }
+      let token = document.cookie.split("; ").find((row) => row.trim().startsWith("mytoken="));
+      if (!token) window.location.replace("/login");
+    };
 
-      function loadMore() {
-        $.ajax({
-          type: "GET",
-          url: "/api/get_topics",
-          data: { 
-            skip: currentCount,
-            sort: currentSort,
-            view: currentView
-          },
-          success: function (response) {
-            let newTopics = response.topics;
+    function loadMore() {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_topics",
+        data: { skip: currentCount, sort: currentSort, view: currentView },
+        success: function (response) {
+          let newTopics = response.topics;
+          if (newTopics.length === 0) {
+            alert("더 이상 불러올 주제가 없습니다.");
+            $("#load-more-btn").hide();
+            return;
+          }
 
-            if (newTopics.length === 0) {
-              alert("더 이상 불러올 주제가 없습니다.");
-              $("#load-more-btn").hide();
-              return;
-            }
+          newTopics.forEach((topic) => {
+            let total = topic.left_count + topic.right_count;
+            let maxVal = total > 0 ? total : 1;
+            let expire = new Date(topic.expire_at);
+            let timeStr = expire.getHours() + "시 " + expire.getMinutes() + "분";
 
-            newTopics.forEach((topic) => {
-              let total = topic.left_count + topic.right_count;
-              let maxVal = total > 0 ? total : 1;
-              
-              let tempHtml = `
-                <div class="topic-box">
-                  <div class="hero">
-                    <div class="hero-body">
-                      <div class="container has-text-centered">
-                        <div class="battle">
-                          <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
-                            <div class="option"><div class="option-name">${topic.left_item}</div></div>
-                          </div>
-                          <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
-                            <div class="option"><div class="option-name">${topic.right_item}</div></div>
-                          </div>
+            let tempHtml = `
+              <div class="topic-box has-background-success-light">
+                <div class="hero">
+                  <div class="hero-body">
+                    <div class="container has-text-centered">
+                      <div class="battle">
+                        <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
+                          <div class="option-name">${topic.left_item}</div>
                         </div>
-                        <progress id="progress-${topic._id}" class="progress is-large" value="0" max="${maxVal}" 
-                          data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
-                        <p>left: ${topic.left_count}</p>
-                        <p>right: ${topic.right_count}</p>
-                        <div style="text-align: center">
-                          <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">
-                            이 항목으로 투표 확정
-                          </button>
+                        <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
+                          <div class="option-name">${topic.right_item}</div>
                         </div>
-                        <div class="topic_info">
-                          <p>총 투표수: ${total}</p>
-                          <p>made-by: ${topic.created_by}</p>
+                      </div>
+                      <progress id="progress-${topic._id}" class="progress is-large" 
+                        value="${topic.left_count}" max="${maxVal}"
+                        data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
+                      <div class="is-flex is-justify-content-space-between px-6">
+                        <p id="label-left-${topic._id}">left: ${topic.left_count}</p>
+                        <p id="label-right-${topic._id}">right: ${topic.right_count}</p>
+                      </div>
+                      <button id="confirm-${topic._id}" class="button has-text-centered m-5" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">이 항목으로 투표 확정</button>
+                      <div class="is-flex is-justify-content-space-between">
+                        <p>${timeStr} 에 만료</p>
+                        <p>총 투표수: ${total}</p>
+                        <p class="made-by">made-by: ${topic.created_by}</p>
+                      </div>
+                      <hr />
+                      <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                        <button class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">Show Comments</button>
+                      </div>
+                      <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
+                        <div class="container">
+                          <input class="input is-success is-rounded" type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
+                          <button class="button is-success is-rounded" onclick="comment('${topic._id}')">등록</button>
                         </div>
-                        <hr />
-                        <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-                          <button class="comment-toggle-btn button" data-topic-id="${topic._id}">Show Comments</button>
-                        </div>
-                        <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
-                          <div class="container">
-                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
-                            <button onclick="comment('${topic._id}')">등록</button>
-                          </div>
-                        </div>
+                        <hr /><div class="comment_container"><p>의견을 남겨주세요!</p></div>
                       </div>
                     </div>
                   </div>
-                </div>`;
-
-              $("#topic-list").append(tempHtml);
-            });
-
-            currentCount += newTopics.length;
-            attachToggleEvents();
-          },
-        });
-      }
-
-      function selectOption(topicId, option) {
-        selectedStorage[topicId] = option;
-        $(`#btn-left-${topicId}`).removeClass("selected");
-        $(`#btn-right-${topicId}`).removeClass("selected");
-
-        $(`#progress-${topicId}`).removeClass("is-rtl");
-
-        const progressBar = $(`#progress-${topicId}`);
-
-        if (option === "left") {
-          $(`#btn-left-${topicId}`).addClass("selected");
-          const leftCount = progressBar.data("left-count");
-          progressBar.attr("value", leftCount);
-        } else {
-          $(`#btn-right-${topicId}`).addClass("selected");
-          progressBar.addClass("is-rtl");
-          const rightCount = progressBar.data("right-count");
-          progressBar.attr("value", rightCount);
-        }
-
-        progressBar.attr(
-          "max",
-          progressBar.data("left-count") + progressBar.data("right-count") || 1
-        );
-
-        let confirmBtn = $(`#confirm-${topicId}`);
-        confirmBtn.prop("disabled", false);
-        confirmBtn.css({
-          "background-color": "#28a745",
-          color: "white",
-          cursor: "pointer",
-        });
-      }
-
-      function confirmVote(topicId) {
-        let selectedOption = selectedStorage[topicId];
-        if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
-
-        $.ajax({
-          type: "POST",
-          url: "/api/vote",
-          data: { topic_id: topicId, option: selectedOption },
-          success: function (response) {
-            alert(response.msg);
-            if (response.result === "success") {
-              window.location.reload();
-            }
-          },
-        });
-      }
-
-      function comment(topicId) {
-        let content = $(`#input-${topicId}`).val();
-        if (content === "") return alert("내용을 입력해주세요.");
-
-        $.ajax({
-          type: "POST",
-          url: "/api/comment",
-          data: { topic_id: topicId, comment: content },
-          success: function (response) {
-            alert("댓글이 저장되었습니다.");
-            window.location.reload();
-          },
-        });
-      }
-
-      function logout() {
-        document.cookie =
-          "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        window.location.href = "/login";
-      }
-
-      function attachToggleEvents() {
-        $(".comment-toggle-btn").off("click").on("click", function () {
-          const topicId = $(this).data("topic-id");
-          const commentBox = $(`#comment_box_${topicId}`);
-          const listContainer = commentBox.find('.comments-list');
-          if (commentBox.is(":hidden") && listContainer.is(":empty")) {
-            get_comments(topicId);
-          }
-          commentBox.toggle();
-          $(this).text(function (i, text) {
-            return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
+                </div>
+              </div>`;
+            $("#topic-list").append(tempHtml);
           });
-        });
-      }
-
-      function get_comments(topicId) {
-        $.ajax({
-          type: "GET",
-          url: "/api/get_comments",
-          data: { topic_id: topicId },
-          success: function (response) {
-            let comments = response.comments;
-            console.log(comments);
-          },
-        })
-      }
-
-      $(document).ready(function() {
-        attachToggleEvents();
+          attachToggleEvents(); // 새로 추가된 요소들에 이벤트 바인딩
+          currentCount += 10;
+        },
       });
-    </script>
-  </body>
+    }
+
+    // --- 핵심 수정: selectOption 함수 ---
+    function selectOption(topicId, option) {
+      selectedStorage[topicId] = option;
+      $(`#btn-left-${topicId}`).removeClass("selected");
+      $(`#btn-right-${topicId}`).removeClass("selected");
+      $(`#btn-${option}-${topicId}`).addClass("selected");
+
+      const progressBar = $(`#progress-${topicId}`);
+      let leftCount = parseInt(progressBar.data("left-count"));
+      let rightCount = parseInt(progressBar.data("right-count"));
+
+      // 실시간 시각화를 위해 가상의 1표 추가 계산
+      let displayLeft = (option === 'left') ? leftCount + 1 : leftCount;
+      let displayRight = (option === 'right') ? rightCount + 1 : rightCount;
+      let total = displayLeft + displayRight;
+
+      // 바 업데이트 (언제나 왼쪽 기준으로 채워짐)
+      progressBar.attr("max", total);
+      progressBar.attr("value", displayLeft);
+
+      // 숫자 라벨 업데이트
+      $(`#label-left-${topicId}`).text(`left: ${displayLeft}`);
+      $(`#label-right-${topicId}`).text(`right: ${displayRight}`);
+
+      let confirmBtn = $(`#confirm-${topicId}`);
+      confirmBtn.prop("disabled", false).css({ "background-color": "#28a745", "color": "white", "cursor": "pointer" });
+    }
+
+    function confirmVote(topicId) {
+      let selectedOption = selectedStorage[topicId];
+      if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
+      $.ajax({
+        type: "POST",
+        url: "/api/vote",
+        data: { topic_id: topicId, option: selectedOption },
+        success: function (response) {
+          alert(response.msg);
+          if (response.result === "success") window.location.reload();
+        },
+      });
+    }
+
+    function comment(topicId) {
+      let content = $(`#input-${topicId}`).val();
+      if (content === "") return alert("내용을 입력해주세요.");
+      $.ajax({
+        type: "POST",
+        url: "/api/comment",
+        data: { topic_id: topicId, comment: content },
+        success: function (response) {
+          alert("댓글이 저장되었습니다.");
+          window.location.reload();
+        },
+      });
+    }
+
+    function logout() {
+      document.cookie = "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.href = "/login";
+    }
+
+    function attachToggleEvents() {
+      $(".comment-toggle-btn").off("click").on("click", function () {
+        const topicId = $(this).data("topic-id");
+        const commentBox = $(`#comment_box_${topicId}`);
+        commentBox.toggle();
+        $(this).text($(this).text() === "Hide Comments" ? "Show Comments" : "Hide Comments");
+      });
+    }
+
+    $(document).ready(function () {
+      attachToggleEvents();
+    });
+  </script>
+</body>
 </html>
