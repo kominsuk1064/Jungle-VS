@@ -180,6 +180,7 @@ def create_topic():
             'right_count': 0,
             'created_by': payload['email'],
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
         return jsonify({'result': 'success', 'msg': '주제가 생성되었습니다!'})
