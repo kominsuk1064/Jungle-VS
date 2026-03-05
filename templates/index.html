@@ -269,9 +269,9 @@
               </div>
               <hr />
 
-              <div class="comment_container">
+              <div class="comment_container" style="min-width: 428.38px;">
                 {% for comment in topic.comments %}
-                <div class="comment-item">
+                <div class="comment-item has-text-left">
                   <span class="comment-user">{{ comment.user_email }}</span>:
                   <span class="comment-text">{{ comment.content }}</span>
                 </div>
@@ -482,7 +482,14 @@
         success: function (response) {
           comment_box.css("display", "block");
           if (list.length) {
-            list.append(`<div><p><strong>${response.comment ? response.comment.user_email : ''}</strong></p><p>${content}</p></div>`);
+            list.append(
+              `
+              <div class="comment-item has-text-left">
+                  <span class="comment-user">${response.comment ? response.comment.user_email : ''}</span>:
+                  <span class="comment-text">${content}</span>
+                </div>
+              `
+            );
           }
 
           $(`#input-${topicId}`).val('');
