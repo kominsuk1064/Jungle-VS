@@ -15,6 +15,9 @@
       <label for="password">Password:</label>
       <input type="password" id="password" required /><br /><br />
 
+      <label for="rePassword">Re-Enter Password:</label>
+      <input type="password" id="rePassword" required /><br /><br />
+
       <label for="nickname">Nickname:</label>
       <input type="text" id="nickname" required /><br /><br />
 
@@ -27,8 +30,8 @@
         let username = $('#username').val()
         let password = $('#password').val()
         let nickname = $('#nickname').val()
-      
-        if (username == '' || password == '' || nickname == '') {
+        let rePassword =  $('#rePassword').val()
+        if (username == '' || password == '' || rePassword == '' || nickname == '') {
           alert('모든 필드를 입력해주세요.')
           return
         }
@@ -39,7 +42,8 @@
           data: {
             username: username,
             password: password,
-            nickname: nickname
+            nickname: nickname,
+            rePassword: rePassword
           },
           success: function (response) {
             if (response['result'] == 'success') {
