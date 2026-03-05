@@ -1,282 +1,296 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>Jungle VS - 대용량 대응 버전</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
-    />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <style>
-      .topic-box {
-        border: 2px solid #333;
-        margin: 20px auto;
-        padding: 20px;
-        max-width: 600px;
-        border-radius: 10px;
-      }
-      .nav-bar {
-        background-color: #f8f9fa;
-        padding: 15px;
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid #ddd;
-      }
-      .vote-btn {
-        padding: 10px 20px;
-        margin: 5px;
-        cursor: pointer;
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      .selected {
-        border: 3px solid #007bff !important;
-        background-color: #e7f1ff;
-      }
-      .confirm-btn {
-        margin-top: 15px;
-        padding: 10px 25px;
-        font-weight: bold;
-        border-radius: 5px;
-        border: none;
-      }
 
-      article {
-        width: 70%;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Jungle VS - 대용량 대응 버전</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    /* 전체 페이지 폰트 적용 */
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg,
+          #ebfffc,
+          #ebfffa,
+          #00d1b2,
+          #effaf5);
+    }
 
-      .box {
-        width: 40%;
-        display: inline-block;
-        margin: 0 1rem;
-      }
+    /* "실시간 투표 리스트" 제목 */
+    .title {
+      font-weight: 700;
+      /* 굵게 */
+      color: #2c3e50;
+      margin-bottom: 1.5rem;
+    }
 
-      .button.is-primary {
-        width: 75%;
-      }
+    /* "1234", "134" 같은 선택지 텍스트 */
+    .option-name {
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
 
-      .button .is-danger {
-        width: 20%;
-      }
+    .made-by {
+      font-weight: 300;
+    }
 
-      .progress {
-        width: 80%;
-        margin: 1rem auto;
-      }
+    .topic-box {
+      border: 2px solid #333;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      border-radius: 10px;
+    }
 
-      .textarea {
-        width: 70%;
-        margin: 1rem auto;
-      }
+    .nav-bar {
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+    }
 
-      .comment_box {
-        padding: 1rem;
-      }
+    .vote-btn {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
 
-      .topic_info {
-        display: flex;
-        justify-content: space-between;
-        width: 80%;
-        margin: 1rem auto;
-      }
+    .selected {
+      border: 3px solid #007bff !important;
+      background-color: #e7f1ff;
+    }
 
-      .is-rtl {
-        direction: rtl;
-      }
 
-      .comment_container > p {
-        display: inline-block;
-      }
+    article {
+      width: 70%;
+    }
 
-      /* 정렬 탭 스타일 추가 */
-      .sort-container {
-        margin: 20px 0;
-      }
-    </style>
-  </head>
+    .box {
+      width: 40%;
+      display: inline-block;
+      margin: 0 1rem;
+    }
 
-  <body>
-    <div class="nav-bar">
-      <span><b>{{ user_info.nickname }}</b>님 접속 중</span>
-      <div>
-        <button onclick="location.href = '/make_topic_page'">
-          + 주제 만들기
-        </button>
-        <button onclick="logout()">로그아웃</button>
+    .button.is-primary {
+      width: 75%;
+    }
+
+    .button .is-danger {
+      width: 20%;
+    }
+
+    .progress {
+      width: 80%;
+      margin: 1rem auto;
+    }
+
+    .textarea {
+      width: 70%;
+      margin: 1rem auto;
+    }
+
+    .comment_box {
+      padding: 1rem;
+    }
+
+    .topic_info {
+      display: flex;
+      justify-content: space-between;
+      width: 80%;
+      margin: 1rem auto;
+    }
+
+    .is-rtl {
+      direction: rtl;
+    }
+
+    .comment_container>p {
+      display: inline-block;
+    }
+
+    .sort-container {
+      margin: 20px 0;
+    }
+
+    .navbar-transparent {
+      background-color: transparent;
+      box-shadow: none;
+    }
+  </style>
+</head>
+
+<body class="">
+  <nav class="navbar navbar-transparent" role="navigation" aria-label="main navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <div class="navbar-item">
+          <span class="tag is-primary is-medium">
+            <b>{{ user_info.nickname }}</b>님 접속 중
+          </span>
+        </div>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons">
+            <button class="button is-success is-outlined" onclick="location.href = '/make_topic_page'">
+              <strong>+ 주제 만들기</strong>
+            </button>
+            <button class="button is-danger is-light" onclick="logout()">로그아웃</button>
+          </div>
+        </div>
       </div>
     </div>
+  </nav>
 
-    <h1 style="text-align: center; margin-top: 20px" class="title">실시간 투표 리스트</h1>
+  <section class="section pb-0">
+    <div class="container">
+      <h1 class="title has-text-centered has-text-success is-2 ">실시간 투표 리스트</h1>
 
-    <div class="tabs is-centered sort-container">
-      <ul>
-        <li class="{% if sort_now == 'newest' %}is-active{% endif %}"><a href="/?sort=newest">최신순</a></li>
-        <li class="{% if sort_now == 'oldest' %}is-active{% endif %}"><a href="/?sort=oldest">오래된순</a></li>
-        <li class="{% if sort_now == 'popular' %}is-active{% endif %}"><a href="/?sort=popular">인기순</a></li>
-      </ul>
+      <div class="tabs is-centered is-boxed mt-5">
+        <ul>
+          <li class="{% if sort_now == 'newest' %}is-active{% endif %}">
+            <a href="/?sort=newest">최신순</a>
+          </li>
+          <li class="{% if sort_now == 'oldest' %}is-active{% endif %}">
+            <a href="/?sort=oldest">오래된순</a>
+          </li>
+          <li class="{% if sort_now == 'popular' %}is-active{% endif %}">
+            <a href="/?sort=popular">인기순</a>
+          </li>
+        </ul>
+      </div>
     </div>
+  </section>
 
-    <div id="topic-list">
-      {% for topic in topics %}
-      <div class="topic-box">
-        <div class="hero">
-          <div class="hero-body">
-            <div class="container has-text-centered">
-              <div class="battle">
-                <div
-                  id="btn-left-{{topic._id}}"
-                  class="box"
-                  onclick="selectOption('{{ topic._id }}', 'left')"
-                >
-                  <div class="option">
-                    <div class="option-name">{{ topic.left_item }}</div>
-                  </div>
-                </div>
-
-                <div
-                  id="btn-right-{{topic._id}}"
-                  class="box"
-                  onclick="selectOption('{{topic._id}}', 'right')"
-                >
-                  <div class="option">
-                    <div class="option-name">{{ topic.right_item }}</div>
-                  </div>
+  <div id="topic-list" class="">
+    {% for topic in topics %}
+    <div class="topic-box has-background-success-light">
+      <div class="hero">
+        <div class="hero-body">
+          <div class="container has-text-centered">
+            <div class="battle ">
+              <div id="btn-left-{{topic._id}}" class="box" onclick="selectOption('{{ topic._id }}', 'left')">
+                <div class="option">
+                  <div class="option-name">{{ topic.left_item }}</div>
                 </div>
               </div>
 
-              <progress
-                id="progress-{{topic._id}}"
-                class="progress is-large"
-                value="0"
-                max="{{ topic.left_count + topic.right_count if topic.left_count + topic.right_count > 0 else 1 }}"
-                data-left-count="{{ topic.left_count }}"
-                data-right-count="{{ topic.right_count }}"
-              ></progress>
+              <div id="btn-right-{{topic._id}}" class="box" onclick="selectOption('{{topic._id}}', 'right')">
+                <div class="option">
+                  <div class="option-name">{{ topic.right_item }}</div>
+                </div>
+              </div>
+            </div>
 
+            <progress id="progress-{{topic._id}}" class="progress is-large" value="0"
+              max="{{ topic.left_count + topic.right_count if topic.left_count + topic.right_count > 0 else 1 }}"
+              data-left-count="{{ topic.left_count }}" data-right-count="{{ topic.right_count }}"></progress>
+
+            <div class="is-flex is-justify-content-space-between">
               <p>left: {{ topic.left_count }}</p>
               <p>right: {{ topic.right_count }}</p>
+            </div>
 
-              <div style="text-align: center">
-                <button
-                  id="confirm-{{ topic._id }}"
-                  class="confirm-btn"
-                  onclick="confirmVote('{{ topic._id }}')"
-                  disabled
-                  style="background-color: #ccc; cursor: not-allowed"
-                >
-                  이 항목으로 투표 확정
-                </button>
+            <button id="confirm-{{ topic._id }}" class="button has-text-centered m-5"
+              onclick="confirmVote('{{ topic._id }}')" disabled style="background-color: #ccc; cursor: not-allowed">
+              이 항목으로 투표 확정
+            </button>
+
+            <div class="is-flex is-justify-content-space-between">
+              <p > {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
+              <p >총 투표수: {{ topic.left_count + topic.right_count }}</p>
+              <p class="made-by">made-by: {{ topic.created_by }}</p>
+            </div>
+
+            <hr />
+
+            <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+              <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
+                Show Comments
+              </button>
+            </div>
+
+            <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
+              <div class="container">
+                <input class="input is-success is-rounded" type="text" id="input-{{ topic._id }}" placeholder="의견을 입력하세요"
+                  style="width: 80%; padding: 5px" />
+                <button class="button is-success is-rounded" onclick="comment('{{ topic._id }}')">등록</button>
               </div>
-
-              <div class="topic_info">
-                <p> {{ topic.expire_at.strftime("%H시 %M분") }}에 만료 </p>
-                <p>총 투표수: {{ topic.left_count + topic.right_count }}</p>
-                <p>made-by: {{ topic.created_by }}</p>
-              </div>
-
               <hr />
 
-              <div
-                class="is-flex is-align-items-center is-justify-content-center mx-auto"
-              >
-                <button
-                  class="comment-toggle-btn button"
-                  data-topic-id="{{ topic._id }}"
-                >
-                  Show Comments
-                </button>
-              </div>
-
-              <div
-                id="comment_box_{{ topic._id }}"
-                class="comment_box"
-                style="display: none"
-              >
-                <div class="container">
-                  <input
-                    type="text"
-                    id="input-{{ topic._id }}"
-                    placeholder="의견을 입력하세요"
-                    style="width: 80%; padding: 5px"
-                  />
-                  <button onclick="comment('{{ topic._id }}')">등록</button>
-                </div>
-                <hr />
-
-                <div class="comment_container">
-                  <p>의견을 남겨주세요!</p>
-                </div>
+              <div class="comment_container">
+                <p>의견을 남겨주세요!</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {% endfor %}
     </div>
+    {% endfor %}
+  </div>
 
-    <div style="text-align: center; margin: 30px">
-      <button
-        id="load-more-btn"
-        onclick="loadMore()"
-        style="padding: 10px 50px; cursor: pointer"
-      >
-        더보기 (+10)
-      </button>
-    </div>
+  <div style="text-align: center; margin: 30px">
+    <button id="load-more-btn" onclick="loadMore()" style="padding: 10px 50px; cursor: pointer">
+      더보기 (+10)
+    </button>
+  </div>
 
-    <script>
-      let currentCount = 10;
-      let selectedStorage = {};
+  <script>
+    let currentCount = 10;
+    let selectedStorage = {};
 
-      // 현재 URL에서 정렬 기준 추출
-      const urlParams = new URLSearchParams(window.location.search);
-      let currentSort = urlParams.get('sort') || 'newest';
+    // 현재 URL에서 정렬 기준 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentSort = urlParams.get('sort') || 'newest';
 
-      window.onpageshow = function (event) {
-        if (
-          event.persisted ||
-          (window.performance && window.performance.navigation.type == 2)
-        ) {
-          window.location.reload();
-        }
-        let token = document.cookie
-          .split("; ")
-          .find((row) => row.trim().startsWith("mytoken="));
-        if (!token) {
-          window.location.replace("/login");
-        }
-      };
+    window.onpageshow = function (event) {
+      if (
+        event.persisted ||
+        (window.performance && window.performance.navigation.type == 2)
+      ) {
+        window.location.reload();
+      }
+      let token = document.cookie
+        .split("; ")
+        .find((row) => row.trim().startsWith("mytoken="));
+      if (!token) {
+        window.location.replace("/login");
+      }
+    };
 
-      function loadMore() {
-        $.ajax({
-          type: "GET",
-          url: "/api/get_topics",
-          data: { 
-            skip: currentCount,
-            sort: currentSort // 더보기 시 현재 정렬 기준 전송
-          },
-          success: function (response) {
-            let newTopics = response.topics;
+    function loadMore() {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_topics",
+        data: {
+          skip: currentCount,
+          sort: currentSort // 더보기 시 현재 정렬 기준 전송
+        },
+        success: function (response) {
+          let newTopics = response.topics;
 
-            if (newTopics.length === 0) {
-              alert("더 이상 불러올 주제가 없습니다.");
-              $("#load-more-btn").hide();
-              return;
-            }
+          if (newTopics.length === 0) {
+            alert("더 이상 불러올 주제가 없습니다.");
+            $("#load-more-btn").hide();
+            return;
+          }
 
-            newTopics.forEach((topic) => {
-              let total = topic.left_count + topic.right_count;
-              let maxVal = total > 0 ? total : 1;
-              
-              let tempHtml = `
+          newTopics.forEach((topic) => {
+            let total = topic.left_count + topic.right_count;
+            let maxVal = total > 0 ? total : 1;
+
+            let tempHtml = `
                 <div class="topic-box">
                   <div class="hero">
                     <div class="hero-body">
@@ -317,101 +331,102 @@
                   </div>
                 </div>`;
 
-              $("#topic-list").append(tempHtml);
-            });
-
-            currentCount += newTopics.length;
-            attachToggleEvents();
-          },
-        });
-      }
-
-      function selectOption(topicId, option) {
-        selectedStorage[topicId] = option;
-        $(`#btn-left-${topicId}`).removeClass("selected");
-        $(`#btn-right-${topicId}`).removeClass("selected");
-
-        $(`#progress-${topicId}`).removeClass("is-rtl");
-
-        const progressBar = $(`#progress-${topicId}`);
-
-        if (option === "left") {
-          $(`#btn-left-${topicId}`).addClass("selected");
-          const leftCount = progressBar.data("left-count");
-          progressBar.attr("value", leftCount);
-        } else {
-          $(`#btn-right-${topicId}`).addClass("selected");
-          progressBar.addClass("is-rtl");
-          const rightCount = progressBar.data("right-count");
-          progressBar.attr("value", rightCount);
-        }
-
-        progressBar.attr(
-          "max",
-          progressBar.data("left-count") + progressBar.data("right-count") || 1
-        );
-
-        let confirmBtn = $(`#confirm-${topicId}`);
-        confirmBtn.prop("disabled", false);
-        confirmBtn.css({
-          "background-color": "#28a745",
-          color: "white",
-          cursor: "pointer",
-        });
-      }
-
-      function confirmVote(topicId) {
-        let selectedOption = selectedStorage[topicId];
-        if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
-
-        $.ajax({
-          type: "POST",
-          url: "/api/vote",
-          data: { topic_id: topicId, option: selectedOption },
-          success: function (response) {
-            alert(response.msg);
-            if (response.result === "success") {
-              window.location.reload();
-            }
-          },
-        });
-      }
-
-      function comment(topicId) {
-        let content = $(`#input-${topicId}`).val();
-        if (content === "") return alert("내용을 입력해주세요.");
-
-        $.ajax({
-          type: "POST",
-          url: "/api/comment",
-          data: { topic_id: topicId, comment: content },
-          success: function (response) {
-            alert("댓글이 저장되었습니다.");
-            window.location.reload();
-          },
-        });
-      }
-
-      function logout() {
-        document.cookie =
-          "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        window.location.href = "/login";
-      }
-
-      function attachToggleEvents() {
-        $(".comment-toggle-btn").off("click").on("click", function () {
-          const topicId = $(this).data("topic-id");
-          const commentBox = $(`#comment_box_${topicId}`);
-          commentBox.toggle();
-          $(this).text(function (i, text) {
-            return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
+            $("#topic-list").append(tempHtml);
           });
-        });
+
+          currentCount += newTopics.length;
+          attachToggleEvents();
+        },
+      });
+    }
+
+    function selectOption(topicId, option) {
+      selectedStorage[topicId] = option;
+      $(`#btn-left-${topicId}`).removeClass("selected");
+      $(`#btn-right-${topicId}`).removeClass("selected");
+
+      $(`#progress-${topicId}`).removeClass("is-rtl");
+
+      const progressBar = $(`#progress-${topicId}`);
+
+      if (option === "left") {
+        $(`#btn-left-${topicId}`).addClass("selected");
+        const leftCount = progressBar.data("left-count");
+        progressBar.attr("value", leftCount);
+      } else {
+        $(`#btn-right-${topicId}`).addClass("selected");
+        progressBar.addClass("is-rtl");
+        const rightCount = progressBar.data("right-count");
+        progressBar.attr("value", rightCount);
       }
 
-      $(document).ready(function() {
-        attachToggleEvents();
+      progressBar.attr(
+        "max",
+        progressBar.data("left-count") + progressBar.data("right-count") || 1
+      );
+
+      let confirmBtn = $(`#confirm-${topicId}`);
+      confirmBtn.prop("disabled", false);
+      confirmBtn.css({
+        "background-color": "#28a745",
+        color: "white",
+        cursor: "pointer",
       });
-    </script>
-  </body>
+    }
+
+    function confirmVote(topicId) {
+      let selectedOption = selectedStorage[topicId];
+      if (!selectedOption) return alert("항목을 먼저 선택해주세요!");
+
+      $.ajax({
+        type: "POST",
+        url: "/api/vote",
+        data: { topic_id: topicId, option: selectedOption },
+        success: function (response) {
+          alert(response.msg);
+          if (response.result === "success") {
+            window.location.reload();
+          }
+        },
+      });
+    }
+
+    function comment(topicId) {
+      let content = $(`#input-${topicId}`).val();
+      if (content === "") return alert("내용을 입력해주세요.");
+
+      $.ajax({
+        type: "POST",
+        url: "/api/comment",
+        data: { topic_id: topicId, comment: content },
+        success: function (response) {
+          alert("댓글이 저장되었습니다.");
+          window.location.reload();
+        },
+      });
+    }
+
+    function logout() {
+      document.cookie =
+        "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.href = "/login";
+    }
+
+    function attachToggleEvents() {
+      $(".comment-toggle-btn").off("click").on("click", function () {
+        const topicId = $(this).data("topic-id");
+        const commentBox = $(`#comment_box_${topicId}`);
+        commentBox.toggle();
+        $(this).text(function (i, text) {
+          return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
+        });
+      });
+    }
+
+    $(document).ready(function () {
+      attachToggleEvents();
+    });
+  </script>
+</body>
+
 </html>
