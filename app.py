@@ -65,7 +65,7 @@ def home():
             comments = list(db.comments.find({'topic_id': t['_id']}))
             for c in comments:
                 c['_id'] = str(c['_id'])
-            t['comments'] = comments      
+            t['comments'] = comments
 
         return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
     except Exception as e:

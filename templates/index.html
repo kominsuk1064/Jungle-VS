@@ -235,7 +235,12 @@
               <hr />
 
               <div class="comment_container">
-                <p>의견을 남겨주세요!</p>
+                {% for comment in topic.comments %}
+                <div>
+                  <p><strong>{{ comment.user_email }}</strong></p>
+                  <p>{{ comment.content }}</p>
+                </div>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -246,7 +251,7 @@
   </div>
 
   <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-    <button id="load-more-btn" class="button is-success" onclick="loadMore()" >
+    <button id="load-more-btn" class="button is-success" onclick="loadMore()">
       더보기 (+10)
     </button>
   </div>
@@ -295,63 +300,65 @@
             let total = topic.left_count + topic.right_count;
             let maxVal = total > 0 ? total : 1;
 
+            let expire = new Date(topic.expire_at);
+            let timeStr = expire.getHours() + "시 " + expire.getMinutes() + "분";
+
             let tempHtml = `
                     <div class="topic-box has-background-success-light">
                       <div class="hero">
                         <div class="hero-body">
                           <div class="container has-text-centered">
                             <div class="battle ">
-                              <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${ topic._id }', 'left')">
+                              <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
                                 <div class="option">
-                                  <div class="option-name">${ topic.left_item }</div>
+                                  <div class="option-name">${topic.left_item}</div>
                                 </div>
                               </div>
 
                               <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
                                 <div class="option">
-                                  <div class="option-name">${ topic.right_item }</div>
+                                  <div class="option-name">${topic.right_item}</div>
                                 </div>
                               </div>
                             </div>
 
                             <progress id="progress-${topic._id}" class="progress is-large" value="0"
                               max="${maxVal}"
-                              data-left-count="${ topic.left_count }" data-right-count="${ topic.right_count }"></progress>
+                              data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
 
                             <div class="is-flex is-justify-content-space-between">
-                              <p>left: ${ topic.left_count }</p>
-                              <p>right: ${ topic.right_count }</p>
+                              <p>left: ${topic.left_count}</p>
+                              <p>right: ${topic.right_count}</p>
                             </div>
 
-                            <button id="confirm-${ topic._id }" class="button has-text-centered m-5"
-                              onclick="confirmVote('${ topic._id }')" disabled style="background-color: #ccc; cursor: not-allowed">
+                            <button id="confirm-${topic._id}" class="button has-text-centered m-5"
+                              onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">
                               이 항목으로 투표 확정
                             </button>
 
                             <div class="is-flex is-justify-content-space-between">
-                              <p> ${ topic.expire_at.strftime("%H시 %M분") }에 만료 </p>
-                              <p>총 투표수: ${ topic.left_count + topic.right_count }</p>
-                              <p class="made-by">made-by: ${ topic.created_by }</p>
+                              <p>${timeStr} 에 만료</p>
+                              <p>총 투표수: ${topic.left_count + topic.right_count}</p>
+                              <p class="made-by">made-by: ${topic.created_by}</p>
                             </div>
 
                             <hr />
 
                             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-                              <button class="comment-toggle-btn button is-success" data-topic-id="${ topic._id }">
+                              <button class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">
                                 Show Comments
                               </button>
                             </div>
 
-                            <div id="comment_box_${ topic._id }" class="comment_box" style="display: none">
+                            <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
                               <div class="container">
-                                <input class="input is-success is-rounded" type="text" id="input-${ topic._id }"
+                                <input class="input is-success is-rounded" type="text" id="input-${topic._id}"
                                   placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
-                                <button class="button is-success is-rounded" onclick="comment('${ topic._id }')">등록</button>
+                                <button class="button is-success is-rounded" onclick="comment('${topic._id}')">등록</button>
                               </div>
                               <hr />
 
                               <div class="comment_container">
-                                <p>의견을 남겨주세요!</p>
                               </div>
                             </div>
                           </div>
@@ -360,6 +367,7 @@
                     </div>`;
 
             $("#topic-list").append(tempHtml);
+            getComments(topic._id);  // 새로운 토픽의 댓글 로드
           });
 
           currentCount += newTopics.length;
@@ -423,13 +431,20 @@
       let content = $(`#input-${topicId}`).val();
       if (content === "") return alert("내용을 입력해주세요.");
 
+      let comment_box = $(`#comment_box_${topicId}`);
+      let list = comment_box.find('.comment_container');
+
       $.ajax({
         type: "POST",
         url: "/api/comment",
         data: { topic_id: topicId, comment: content },
         success: function (response) {
-          alert("댓글이 저장되었습니다.");
-          window.location.reload();
+          comment_box.css("display", "block");
+          if (list.length) {
+            list.append(`<div><p><strong>${response.comment ? response.comment.user_email : ''}</strong></p><p>${content}</p></div>`);
+          }
+
+          $(`#input-${topicId}`).val('');
         },
       });
     }
@@ -448,6 +463,27 @@
         $(this).text(function (i, text) {
           return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
         });
+      });
+    }
+
+    function getComments(topicId) {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_comments",
+        data: { topic_id: topicId },
+        success: function (response) {
+          const commentBox = $(`#comment_box_${topicId}`);
+          const list = commentBox.find('.comment_container');
+          list.empty();
+
+          if (response.comments && response.comments.length > 0) {
+            response.comments.forEach(comment => {
+              list.append(`<div><p><strong>${comment.user_email}</strong></p><p>${comment.content}</p></div>`);
+            });
+          } else {
+            list.append("<p>아직 의견이 없습니다. 첫 번째로 의견을 남겨보세요!</p>");
+          }
+        },
       });
     }
 
