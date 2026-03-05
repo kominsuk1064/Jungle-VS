@@ -273,7 +273,7 @@
               <div class="comment_container" style="min-width: 428.38px;">
                 {% for comment in topic.comments %}
                 <div class="comment-item has-text-left">
-                  <span class="comment-user">{{ comment.user_email }}</span>:
+                  <span class="comment-user">{{ comment.user_nickname }}</span>:
                   <span class="comment-text">{{ comment.content }}</span>
                 </div>
                 {% endfor %}
@@ -484,7 +484,7 @@
             list.append(
               `
               <div class="comment-item has-text-left">
-                  <span class="comment-user">${response.comment ? response.comment.user_email : ''}</span>:
+                  <span class="comment-user">${response.comment ? response.comment.user_nickname : ''}</span>:
                   <span class="comment-text">${content}</span>
                 </div>
               `
@@ -547,7 +547,7 @@
           if (response.comments && response.comments.length > 0) {
             response.comments.forEach(comment => {
               list.append(`<div class="comment-item has-text-left">
-                  <span class="comment-user"><strong>${comment.user_email}</strong></span>:
+                  <span class="comment-user"><strong>${comment.user_nickname}</strong></span>:
                   <span class="comment-text">${comment.content}</span>
                 </div>`);
             });
