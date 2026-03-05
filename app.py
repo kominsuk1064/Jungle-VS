@@ -19,7 +19,7 @@ def home():
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
         
-        topics = list(db.topics.find({}).sort('created_at', -1))
+        topics = list(db.topics.find({}).sort('created_at', -1).limit(10))
         
         for t in topics:
             t['_id'] = str(t['_id'])
@@ -27,6 +27,18 @@ def home():
         return render_template('index.html', user_info=user_info, topics=topics)
     except:
         return redirect(url_for('login'))
+
+@app.route('/api/get_topics', methods=['GET'])
+def get_more_topics():
+    skip_receive = int(request.args.get('skip', 0))
+    limit_count = 10
+
+    topics = list(db.topics.find({}).sort('created_at', -1).skip(skip_receive).limit(limit_count))
+    
+    for t in topics:
+        t['_id'] = str(t['_id'])
+        
+    return jsonify({'result': 'success', 'topics': topics})
 
 @app.route('/api/topic', methods=['POST'])
 def create_topic():

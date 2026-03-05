@@ -5,7 +5,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Jungle VS - 확정 투표 방식</title>
+    <title>Jungle VS - 대용량 대응 버전</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
       .topic-box {
@@ -62,7 +62,6 @@
 
           <div style="display: flex; justify-content: center;">
             <button id="btn-left-{{ topic._id }}" class="vote-btn" onclick="selectOption('{{ topic._id }}', 'left')">{{ topic.left_item }} ({{ topic.left_count }})</button>
-
             <button id="btn-right-{{ topic._id }}" class="vote-btn" onclick="selectOption('{{ topic._id }}', 'right')">{{ topic.right_item }} ({{ topic.right_count }})</button>
           </div>
 
@@ -79,23 +78,75 @@
       {% endfor %}
     </div>
 
+    <div style="text-align: center; margin: 30px;">
+      <button id="load-more-btn" onclick="loadMore()" style="padding: 10px 50px; cursor: pointer;">더보기 (+10)</button>
+    </div>
+
     <script>
+      let currentCount = 10
+      let selectedStorage = {}
+      
       window.onpageshow = function (event) {
         if (event.persisted || (window.performance && window.performance.navigation.type == 2)) {
           window.location.reload()
         }
-      
         let token = document.cookie.split('; ').find((row) => row.trim().startsWith('mytoken='))
         if (!token) {
           window.location.replace('/login')
         }
       }
       
-      let selectedStorage = {}
+      function loadMore() {
+    $.ajax({
+        type: "GET",
+        url: "/api/get_topics",
+        data: { skip: currentCount },
+        success: function (response) {
+            let newTopics = response.topics;
+
+            if (newTopics.length === 0) {
+                alert("더 이상 불러올 주제가 없습니다.");
+                $('#load-more-btn').hide();
+                return;
+            }
+
+            newTopics.forEach(topic => {
+                let tempHtml = `
+                    <div class="topic-box">
+                        <h2 style="text-align: center;">${topic.left_item} VS ${topic.right_item}</h2>
+                        
+                        <div style="display: flex; justify-content: center;">
+                            <button id="btn-left-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'left')">
+                                ${topic.left_item} (${topic.left_count})
+                            </button>
+                            <button id="btn-right-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'right')">
+                                ${topic.right_item} (${topic.right_count})
+                            </button>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed;">
+                                이 항목으로 투표 확정
+                            </button>
+                        </div>
+
+                        <hr />
+                        <div style="margin-top: 15px; text-align: center;">
+                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 70%; padding: 5px;" />
+                            <button onclick="comment('${topic._id}')">등록</button>
+                        </div>
+                    </div>`;
+                
+                $('#topic-list').append(tempHtml);
+            });
+
+            currentCount += newTopics.length;
+        }
+    });
+}
       
       function selectOption(topicId, option) {
         selectedStorage[topicId] = option
-      
         $(`#btn-left-${topicId}`).removeClass('selected')
         $(`#btn-right-${topicId}`).removeClass('selected')
       
@@ -107,20 +158,12 @@
       
         let confirmBtn = $(`#confirm-${topicId}`)
         confirmBtn.prop('disabled', false)
-        confirmBtn.css({
-          'background-color': '#28a745',
-          color: 'white',
-          cursor: 'pointer'
-        })
+        confirmBtn.css({ 'background-color': '#28a745', color: 'white', cursor: 'pointer' })
       }
       
       function confirmVote(topicId) {
         let selectedOption = selectedStorage[topicId]
-      
-        if (!selectedOption) {
-          alert('항목을 먼저 선택해주세요!')
-          return
-        }
+        if (!selectedOption) return alert('항목을 먼저 선택해주세요!')
       
         $.ajax({
           type: 'POST',
