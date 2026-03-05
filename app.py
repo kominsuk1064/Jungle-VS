@@ -11,6 +11,15 @@ SECRET_KEY = 'JUNGLE_SECRET_6'
 client = MongoClient('mongodb://localhost:27017/')
 db = client.dbjungle
 
+# 정렬 쿼리를 생성하는 헬퍼 함수
+def get_sort_query(sort_type):
+    if sort_type == 'oldest':
+        return [('created_at', 1)]
+    elif sort_type == 'popular':
+        # 투표 합계(left_count + right_count) 기준 내림차순, 같으면 최신순
+        return [('total_count', -1), ('created_at', -1)]
+    else:  # newest 또는 기본값
+        return [('created_at', -1)]
 
 @app.route('/')
 def home():
@@ -19,12 +28,24 @@ def home():
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
         
-        topics = list(db.topics.find({"trash":True}).sort('created_at', -1).limit(10))
+        # 정렬 기준 파라미터 (기본값: newest)
+        sort_type = request.args.get('sort', 'newest')
+        sort_query = get_sort_query(sort_type)
+        
+        # total_count 필드를 임시로 만들어 정렬
+        pipeline = [
+            {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
+            {"$sort": dict(sort_query)},
+            {"$limit": 10}
+        ]
+        topics = list(db.topics.aggregate(pipeline))
         
         for t in topics:
             t['_id'] = str(t['_id'])
+            # 만든지 30초 후에 만료
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
             
-        return render_template('index.html', user_info=user_info, topics=topics)
+        return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type)
     except:
         return redirect(url_for('login'))
     
@@ -47,13 +68,21 @@ def end_vote_page():
 @app.route('/api/get_topics', methods=['GET'])
 def get_more_topics():
     skip_receive = int(request.args.get('skip', 0))
+    sort_type = request.args.get('sort', 'newest')
     limit_count = 10
+    sort_query = get_sort_query(sort_type)
 
-    topics = list(db.topics.find({}).sort('created_at', -1).skip(skip_receive).limit(limit_count))
+    pipeline = [
+        {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
+        {"$sort": dict(sort_query)},
+        {"$skip": skip_receive},
+        {"$limit": limit_count}
+    ]
+    topics = list(db.topics.aggregate(pipeline))
     
     for t in topics:
         t['_id'] = str(t['_id'])
-        
+        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
     return jsonify({'result': 'success', 'topics': topics})
 
 @app.route('/api/topic', methods=['POST'])
@@ -85,20 +114,19 @@ def login():
 def signup():
     return render_template('signup.html')
 
-
 @app.route('/api/signup', methods=['POST'])
 def signup_post():
     email = request.form['username']
     password = request.form['password']
     nickname = request.form['nickname']
     rePassword = request.form['rePassword']
+    
     if db.users.find_one({'email': email}):
         return jsonify({'result': 'fail', 'msg': '이미 존재하는 이메일입니다.'})
     
     if password != rePassword :
         return jsonify({'result': 'fail', 'msg': '비밀번호가 일치하지 않습니다!'})
     
-
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     db.users.insert_one({
         'email': email,
@@ -111,25 +139,20 @@ def signup_post():
 def login_post():
     email = request.form['username']
     password = request.form['password']
-
     user = db.users.find_one({'email': email})
 
-    # 1) 아이디로 DB를 서칭, 없을시 실패 얼럿
     if not user : 
         return jsonify({'result': 'fail', 'msg':'존재하지 않는 ID입니다.'})
 
-    # 2번) 비밀번호가 일치하지 않을 시 
     if not check_password_hash(user.get('password'), password):
         return jsonify({'result': 'fail', 'msg':'비밀번호가 틀립니다.'})
 
-    #로그인 성공시 토큰 발급 
     payload = {
         'email': email,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     return jsonify({'result': 'success', 'token': token})
-
 
 @app.route('/api/vote', methods=['POST'])
 def vote():
