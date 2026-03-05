@@ -95,6 +95,11 @@
       .comment_container > p {
         display: inline-block;
       }
+
+      /* 정렬 탭 스타일 추가 */
+      .sort-container {
+        margin: 20px 0;
+      }
     </style>
   </head>
 
@@ -109,7 +114,15 @@
       </div>
     </div>
 
-    <h1 style="text-align: center">실시간 투표 리스트</h1>
+    <h1 style="text-align: center; margin-top: 20px" class="title">실시간 투표 리스트</h1>
+
+    <div class="tabs is-centered sort-container">
+      <ul>
+        <li class="{% if sort_now == 'newest' %}is-active{% endif %}"><a href="/?sort=newest">최신순</a></li>
+        <li class="{% if sort_now == 'oldest' %}is-active{% endif %}"><a href="/?sort=oldest">오래된순</a></li>
+        <li class="{% if sort_now == 'popular' %}is-active{% endif %}"><a href="/?sort=popular">인기순</a></li>
+      </ul>
+    </div>
 
     <div id="topic-list">
       {% for topic in topics %}
@@ -117,9 +130,7 @@
         <div class="hero">
           <div class="hero-body">
             <div class="container has-text-centered">
-              <!-- vs components -->
               <div class="battle">
-                <!-- left item -->
                 <div
                   id="btn-left-{{topic._id}}"
                   class="box"
@@ -130,7 +141,6 @@
                   </div>
                 </div>
 
-                <!-- right item -->
                 <div
                   id="btn-right-{{topic._id}}"
                   class="box"
@@ -142,10 +152,11 @@
                 </div>
               </div>
 
-              <!-- progress bar -->
               <progress
                 id="progress-{{topic._id}}"
                 class="progress is-large"
+                value="0"
+                max="{{ topic.left_count + topic.right_count if topic.left_count + topic.right_count > 0 else 1 }}"
                 data-left-count="{{ topic.left_count }}"
                 data-right-count="{{ topic.right_count }}"
               ></progress>
@@ -153,7 +164,6 @@
               <p>left: {{ topic.left_count }}</p>
               <p>right: {{ topic.right_count }}</p>
 
-              <!-- confirm button -->
               <div style="text-align: center">
                 <button
                   id="confirm-{{ topic._id }}"
@@ -166,15 +176,13 @@
                 </button>
               </div>
 
-              <!-- topic info -->
               <div class="topic_info">
-                <p>만료시간</p>
-                <p>made-by</p>
+                <p>총 투표수: {{ topic.left_count + topic.right_count }}</p>
+                <p>made-by: {{ topic.created_by }}</p>
               </div>
 
               <hr />
 
-              <!-- Comment Toggle Button -->
               <div
                 class="is-flex is-align-items-center is-justify-content-center mx-auto"
               >
@@ -186,13 +194,11 @@
                 </button>
               </div>
 
-              <!-- Comments_list -->
               <div
                 id="comment_box_{{ topic._id }}"
                 class="comment_box"
                 style="display: none"
               >
-                <!-- 댓글 입력란 -->
                 <div class="container">
                   <input
                     type="text"
@@ -204,20 +210,8 @@
                 </div>
                 <hr />
 
-                <!-- 댓글 목록 -->
                 <div class="comment_container">
-                  <p display="inline-block"><strong>User</strong></p>
-                  <p>Comment content...</p>
-                </div>
-
-                <hr />
-
-                <div class="comment_container">
-                  <p display="inline-block"><strong>Userasdfadf</strong></p>
-                  <p>
-                    Comment
-                    content...asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf
-                  </p>
+                  <p>의견을 남겨주세요!</p>
                 </div>
               </div>
             </div>
@@ -241,6 +235,10 @@
       let currentCount = 10;
       let selectedStorage = {};
 
+      // 현재 URL에서 정렬 기준 추출
+      const urlParams = new URLSearchParams(window.location.search);
+      let currentSort = urlParams.get('sort') || 'newest';
+
       window.onpageshow = function (event) {
         if (
           event.persisted ||
@@ -260,7 +258,10 @@
         $.ajax({
           type: "GET",
           url: "/api/get_topics",
-          data: { skip: currentCount },
+          data: { 
+            skip: currentCount,
+            sort: currentSort // 더보기 시 현재 정렬 기준 전송
+          },
           success: function (response) {
             let newTopics = response.topics;
 
@@ -271,36 +272,55 @@
             }
 
             newTopics.forEach((topic) => {
+              let total = topic.left_count + topic.right_count;
+              let maxVal = total > 0 ? total : 1;
+              
               let tempHtml = `
-                    <div class="topic-box">
-                        <h2 style="text-align: center;">${topic.left_item} VS ${topic.right_item}</h2>
-                        
-                        <div style="display: flex; justify-content: center;">
-                            <button id="btn-left-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'left')">
-                                ${topic.left_item} (${topic.left_count})
-                            </button>
-                            <button id="btn-right-${topic._id}" class="vote-btn" onclick="selectOption('${topic._id}', 'right')">
-                                ${topic.right_item} (${topic.right_count})
-                            </button>
+                <div class="topic-box">
+                  <div class="hero">
+                    <div class="hero-body">
+                      <div class="container has-text-centered">
+                        <div class="battle">
+                          <div id="btn-left-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'left')">
+                            <div class="option"><div class="option-name">${topic.left_item}</div></div>
+                          </div>
+                          <div id="btn-right-${topic._id}" class="box" onclick="selectOption('${topic._id}', 'right')">
+                            <div class="option"><div class="option-name">${topic.right_item}</div></div>
+                          </div>
                         </div>
-
-                        <div style="text-align: center;">
-                            <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed;">
-                                이 항목으로 투표 확정
-                            </button>
+                        <progress id="progress-${topic._id}" class="progress is-large" value="0" max="${maxVal}" 
+                          data-left-count="${topic.left_count}" data-right-count="${topic.right_count}"></progress>
+                        <p>left: ${topic.left_count}</p>
+                        <p>right: ${topic.right_count}</p>
+                        <div style="text-align: center">
+                          <button id="confirm-${topic._id}" class="confirm-btn" onclick="confirmVote('${topic._id}')" disabled style="background-color: #ccc; cursor: not-allowed">
+                            이 항목으로 투표 확정
+                          </button>
                         </div>
-
+                        <div class="topic_info">
+                          <p>총 투표수: ${total}</p>
+                          <p>made-by: ${topic.created_by}</p>
+                        </div>
                         <hr />
-                        <div style="margin-top: 15px; text-align: center;">
-                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 70%; padding: 5px;" />
-                            <button onclick="comment('${topic._id}')">등록</button>
+                        <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                          <button class="comment-toggle-btn button" data-topic-id="${topic._id}">Show Comments</button>
                         </div>
-                    </div>`;
+                        <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
+                          <div class="container">
+                            <input type="text" id="input-${topic._id}" placeholder="의견을 입력하세요" style="width: 80%; padding: 5px" />
+                            <button onclick="comment('${topic._id}')">등록</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>`;
 
               $("#topic-list").append(tempHtml);
             });
 
             currentCount += newTopics.length;
+            attachToggleEvents();
           },
         });
       }
@@ -327,7 +347,7 @@
 
         progressBar.attr(
           "max",
-          progressBar.data("left-count") + progressBar.data("right-count"),
+          progressBar.data("left-count") + progressBar.data("right-count") || 1
         );
 
         let confirmBtn = $(`#confirm-${topicId}`);
@@ -377,13 +397,19 @@
         window.location.href = "/login";
       }
 
-      $(".comment-toggle-btn").click(function () {
-        const topicId = $(this).data("topic-id");
-        const commentBox = $(`#comment_box_${topicId}`);
-        commentBox.toggle();
-        $(this).text(function (i, text) {
-          return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
+      function attachToggleEvents() {
+        $(".comment-toggle-btn").off("click").on("click", function () {
+          const topicId = $(this).data("topic-id");
+          const commentBox = $(`#comment_box_${topicId}`);
+          commentBox.toggle();
+          $(this).text(function (i, text) {
+            return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
+          });
         });
+      }
+
+      $(document).ready(function() {
+        attachToggleEvents();
       });
     </script>
   </body>
