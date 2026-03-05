@@ -260,7 +260,12 @@
               <hr />
 
               <div class="comment_container">
-                <p>의견을 남겨주세요!</p>
+                {% for comment in topic.comments %}
+                <div>
+                  <p><strong>{{ comment.user_email }}</strong></p>
+                  <p>{{ comment.content }}</p>
+                </div>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -389,7 +394,6 @@
                               <hr />
 
                               <div class="comment_container">
-                                <p>의견을 남겨주세요!</p>
                               </div>
                             </div>
                           </div>
@@ -457,16 +461,23 @@
         let content = $(`#input-${topicId}`).val();
         if (content === "") return alert("내용을 입력해주세요.");
 
-        $.ajax({
-          type: "POST",
-          url: "/api/comment",
-          data: { topic_id: topicId, comment: content },
-          success: function (response) {
-            alert("댓글이 저장되었습니다.");
-            window.location.reload();
-          },
-        });
-      }
+      let comment_box = $(`#comment_box_${topicId}`);
+      let list = comment_box.find('.comment_container');
+
+      $.ajax({
+        type: "POST",
+        url: "/api/comment",
+        data: { topic_id: topicId, comment: content },
+        success: function (response) {
+          comment_box.css("display", "block");
+          if (list.length) {
+            list.append(`<div><p><strong>${response.comment ? response.comment.user_email : ''}</strong></p><p>${content}</p></div>`);
+          }
+
+          $(`#input-${topicId}`).val('');
+        },
+      });
+    }
 
       function logout() {
         document.cookie =
@@ -483,7 +494,35 @@
             return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
           });
         });
-      }
+      });
+    }
+
+    function getComments(topicId) {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_comments",
+        data: { topic_id: topicId },
+        success: function (response) {
+          const commentBox = $(`#comment_box_${topicId}`);
+          const list = commentBox.find('.comment_container');
+          list.empty();
+
+          if (response.comments && response.comments.length > 0) {
+            response.comments.forEach(comment => {
+              list.append(`<div><p><strong>${comment.user_email}</strong></p><p>${comment.content}</p></div>`);
+            });
+          } else {
+            list.append("<p>아직 의견이 없습니다. 첫 번째로 의견을 남겨보세요!</p>");
+          }
+        },
+      });
+    }
+
+    $(document).ready(function () {
+      attachToggleEvents();
+    });
+  </script>
+</body>
 
       $(document).ready(function() {
         attachToggleEvents();
