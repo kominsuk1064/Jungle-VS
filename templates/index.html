@@ -126,8 +126,14 @@
       direction: rtl;
     }
 
-    .comment_container>p {
+    .comment_container {
       display: inline-block;
+    }
+
+    .comment-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
     }
 
     .sort-container {
@@ -265,9 +271,9 @@
 
               <div class="comment_container">
                 {% for comment in topic.comments %}
-                <div>
-                  <p><strong>{{ comment.user_email }}</strong></p>
-                  <p>{{ comment.content }}</p>
+                <div class="comment-item">
+                  <span class="comment-user">{{ comment.user_email }}</span>:
+                  <span class="comment-text">{{ comment.content }}</span>
                 </div>
                 {% endfor %}
               </div>
