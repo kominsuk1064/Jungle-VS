@@ -177,6 +177,7 @@
                 data-left-count="{{ topic.left_count }}"
                 data-right-count="{{ topic.right_count }}"
               ></progress>
+              <progress></progress>
 
               <p>left: {{ topic.left_count }}</p>
               <p>right: {{ topic.right_count }}</p>
@@ -405,13 +406,22 @@
         let content = $(`#input-${topicId}`).val();
         if (content === "") return alert("내용을 입력해주세요.");
 
+        let comment_box = $(`#comment_box_${topicId}`);
+        let list = comment_box.find('.comments-list');
+
         $.ajax({
           type: "POST",
           url: "/api/comment",
           data: { topic_id: topicId, comment: content },
           success: function (response) {
-            alert("댓글이 저장되었습니다.");
-            window.location.reload();
+            // window.location.reload();
+            comment_box.css("display", "block");
+            if (list.length) {
+              list.append(
+                `<div class="comment_container"><p><strong>${response.comment ? response.comment.user_email : ''}</strong></p><p>${content}</p></div><hr />`
+              );
+            }
+            $(`#input-${topicId}`).val('');
           },
         });
       }

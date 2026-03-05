@@ -243,13 +243,10 @@ def post_comment():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        db.comments.insert_one({
-            'user_email': payload['email'],
-            'topic_id': request.form['topic_id'],
-            'content': request.form['comment'],
-            'created_at': datetime.datetime.now()
-        })
-        return jsonify({'result': 'success'})
+        comment_doc = {'user_email': payload['email'], 'topic_id': request.form['topic_id'], 'content': request.form['comment'], 'created_at': datetime.datetime.now()}
+        db.comments.insert_one(comment_doc)
+        comment_doc['_id'] = str(comment_doc.get('_id', ''))
+        return jsonify({'result': 'success', 'comment': comment_doc})
     except:
         return jsonify({'msg': '로그인 필요'}), 403
 
@@ -261,7 +258,7 @@ def make_topic_page():
 @app.route('/api/get_comments', methods=['GET'])
 def get_comments():
     topic_id = request.args.get('topic_id')
-    comments = list(db.comments.find({'topic_id': topic_id}))    # convert ObjectIds to strings for JSON serialization
+    comments = list(db.comments.find({'topic_id': topic_id}))
     for c in comments:
         c['_id'] = str(c['_id'])    
     return jsonify({'result': 'success', 'comments': comments})
