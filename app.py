@@ -58,6 +58,11 @@ def home():
             t['_id'] = str(t['_id'])
             # 만료 시간 계산 (30초는 테스트용으로 보임)
             t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=3000)         
+
+            if datetime.datetime.now() >= t['expire_at'] : 
+                t['trash'] = False
+                db.topics.update_one({"_id":t['_id']},{"$set":{"trash":False}})
             
             # 만료 체크 및 처리
             if now >= t['expire_at']: 
@@ -109,6 +114,18 @@ def get_more_topics():
         # 투표 정보 매핑
         user_votes = list(db.votes.find({"user_email": user_email}))
         voted_dict = {v['topic_id']: v['selected'] for v in user_votes}
+        pipeline = [
+            {"$match": query},
+            {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
+            {"$sort": dict(sort_query)},
+            {"$skip": skip_receive},
+            {"$limit": 10}
+        ]
+        topics = list(db.topics.aggregate(pipeline))
+        live_topics =[]
+        for t in topics:
+            t['_id'] = str(t['_id'])
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=3000)
 
         live_topics = []
         for t in topics:
@@ -168,6 +185,7 @@ def create_topic():
             'right_count': 0,
             'created_by': payload['email'],
             'created_at': datetime.datetime.now(),
+            'expire_at' : datetime.datetime.now() + datetime.timedelta(days=3),
             'trash': True
         })
         return jsonify({'result': 'success', 'msg': '주제가 생성되었습니다!'})
