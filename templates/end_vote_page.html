@@ -173,8 +173,7 @@
             <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
               <div class="comment_container">
                 {% for comment in topic.comments %}
-                <div style="border-bottom: 1px solid #eee; padding: 5px 0; text-align: left;">
-                  <p><strong>{{ comment.user_email }}</strong></p>
+                  <p><strong>{{ comment.user_nickname }}</strong></p>
                   <p>{{ comment.content }}</p>
                 </div>
                 {% endfor %}
