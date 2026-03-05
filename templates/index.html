@@ -152,6 +152,9 @@
                 </div>
               </div>
 
+              <button onclick="get_comments('{{ topic._id }}')">get_comments</button>
+
+
               <progress
                 id="progress-{{topic._id}}"
                 class="progress is-large"
@@ -211,9 +214,15 @@
                 </div>
                 <hr />
 
-                <div class="comment_container">
-                  <p>의견을 남겨주세요!</p>
-                </div>
+                <div class="comments-list">
+                  {% for comment in topic.comments %}
+                    <div class="comment_container">
+                      <p><strong>{{ comment.user_email }}</strong></p>
+                      <p>{{ comment.content }}</p>
+                    </div>
+                    <hr />
+                  {% endfor %}
+              </div>
               </div>
             </div>
           </div>
@@ -402,11 +411,27 @@
         $(".comment-toggle-btn").off("click").on("click", function () {
           const topicId = $(this).data("topic-id");
           const commentBox = $(`#comment_box_${topicId}`);
+          const listContainer = commentBox.find('.comments-list');
+          if (commentBox.is(":hidden") && listContainer.is(":empty")) {
+            get_comments(topicId);
+          }
           commentBox.toggle();
           $(this).text(function (i, text) {
             return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
           });
         });
+      }
+
+      function get_comments(topicId) {
+        $.ajax({
+          type: "GET",
+          url: "/api/get_comments",
+          data: { topic_id: topicId },
+          success: function (response) {
+            let comments = response.comments;
+            console.log(comments);
+          },
+        })
       }
 
       $(document).ready(function() {
