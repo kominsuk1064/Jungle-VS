@@ -42,6 +42,8 @@ def home():
         
         for t in topics:
             t['_id'] = str(t['_id'])
+            # 만든지 30초 후에 만료
+            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)         
             
         return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type)
     except:
@@ -64,7 +66,7 @@ def get_more_topics():
     
     for t in topics:
         t['_id'] = str(t['_id'])
-        
+        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
     return jsonify({'result': 'success', 'topics': topics})
 
 @app.route('/api/topic', methods=['POST'])
