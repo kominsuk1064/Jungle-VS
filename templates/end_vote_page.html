@@ -143,9 +143,8 @@
                         <p>right: {{ topic.right_count }}</p>
 
                         <!-- topic info -->
-                        <div class="topic_info">
-                            <p>만료시간</p>
-                            <p>made-by</p>
+                        <div class="topic_info" style="position: relative;">
+                            <p style="position: absolute; right: 0; bottom: 0;">made-by</p>
                         </div>
 
                         <hr />
@@ -159,12 +158,6 @@
 
                         <!-- Comments_list -->
                         <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
-                            <!-- 댓글 입력란 -->
-                            <div class="container">
-                                <input type="text" id="input-{{ topic._id }}" placeholder="의견을 입력하세요"
-                                    style="width: 80%; padding: 5px" />
-                                <button onclick="comment('{{ topic._id }}')">등록</button>
-                            </div>
                             <hr />
 
                             <!-- 댓글 목록 -->
@@ -309,21 +302,6 @@
                 "background-color": "#28a745",
                 color: "white",
                 cursor: "pointer",
-            });
-        }
-
-        function comment(topicId) {
-            let content = $(`#input-${topicId}`).val();
-            if (content === "") return alert("내용을 입력해주세요.");
-
-            $.ajax({
-                type: "POST",
-                url: "/api/comment",
-                data: { topic_id: topicId, comment: content },
-                success: function (response) {
-                    alert("댓글이 저장되었습니다.");
-                    window.location.reload();
-                },
             });
         }
 
