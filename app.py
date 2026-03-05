@@ -30,7 +30,6 @@ def home():
         sort_type = request.args.get('sort', 'newest')
         view_type = request.args.get('view', 'all')
         
-        now = datetime.datetime.now()
         db.topics.update_many(
             {"trash": True, "expire_at": {"$lte": datetime.datetime.now()}},
             {"$set": {"trash": False}}
@@ -58,10 +57,11 @@ def home():
             t['_id'] = str(t['_id'])
             t['user_voted'] = voted_dict.get(t['_id'], None)
 
-            comments = list(db.comments.find({'topic_id': t['_id']}))
-            for c in comments:
+            comments_list = list(db.comments.find({'topic_id': t['_id']}))
+            for c in comments_list:
                 c['_id'] = str(c['_id'])
-            t['comments'] = comments
+            t['comments'] = comments_list
+            t['comment_count'] = len(comments_list)
             
             live_topics.append(t)
 
@@ -81,10 +81,11 @@ def end_vote_page():
         
         for t in topics:
             t['_id'] = str(t['_id'])
-            comments = list(db.comments.find({'topic_id': t['_id']}))
-            for c in comments:
+            comments_list = list(db.comments.find({'topic_id': t['_id']}))
+            for c in comments_list:
                 c['_id'] = str(c['_id'])
-            t['comments'] = comments
+            t['comments'] = comments_list
+            t['comment_count'] = len(comments_list)
 
         return render_template('end_vote_page.html', user_info=user_info, topics=topics)
     except Exception as e:
@@ -125,6 +126,7 @@ def get_more_topics():
         for t in topics:
             t['_id'] = str(t['_id'])
             t['user_voted'] = voted_dict.get(t['_id'], None)
+            t['comment_count'] = db.comments.count_documents({'topic_id': t['_id']})
             live_topics.append(t)
 
         return jsonify({'result': 'success', 'topics': live_topics})
