@@ -113,7 +113,7 @@ def get_more_topics():
     live_topics =[]
     for t in topics:
         t['_id'] = str(t['_id'])
-        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
+        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=3000)
 
         if t['trash']:
             t['_id'] = str(t['_id'])
