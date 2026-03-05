@@ -62,6 +62,11 @@ def signup_post():
     email = request.form['username']
     password = request.form['password']
     nickname = request.form['nickname']
+    re_password = request.form['re-password']
+
+    if password != re_password :
+        return jsonify({'result': 'fail', 'msg': '비밀번호가 일치하지 않습니다.'})
+    
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     if db.users.find_one({'email': email}):
         return jsonify({'result': 'fail', 'msg': '이미 존재하는 이메일입니다.'})
@@ -192,4 +197,4 @@ if __name__ == '__main__':
             'created_at': datetime.datetime.now()
         })
         
-    app.run('0.0.0.0', port=5000, debug=True)
+    app.run('0.0.0.0', port=5001, debug=True)

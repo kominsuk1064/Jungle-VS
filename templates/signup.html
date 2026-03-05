@@ -15,6 +15,10 @@
       <label for="password">Password:</label>
       <input type="password" id="password" required /><br /><br />
 
+      <label for="re_password">Re-Enter Password:</label>
+      <input type="password" id="re_password" required /><br /><br />
+
+
       <label for="nickname">Nickname:</label>
       <input type="text" id="nickname" required /><br /><br />
 
@@ -26,6 +30,7 @@
       function doSignup() {
         let username = $('#username').val()
         let password = $('#password').val()
+        let re-password = $('#re-password').val()
         let nickname = $('#nickname').val()
       
         if (username == '' || password == '' || nickname == '') {
@@ -39,7 +44,8 @@
           data: {
             username: username,
             password: password,
-            nickname: nickname
+            nickname: nickname,
+            re_password: re_password
           },
           success: function (response) {
             if (response['result'] == 'success') {
