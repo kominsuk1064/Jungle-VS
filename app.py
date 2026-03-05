@@ -25,19 +25,17 @@ def home():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
+        user_email = payload['email']
         
-        # 파라미터 읽기
         sort_type = request.args.get('sort', 'newest')
         view_type = request.args.get('view', 'all')
         
-        # 필터 조건 설정
-        query = {}
+        query = {"trash": True}
         if view_type == 'mine':
-            query = {"created_by": payload['email']}
+            query["created_by"] = user_email
             
         sort_query = get_sort_query(sort_type)
         
-        # 파이프라인
         pipeline = [
             {"$match": query},
             {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
@@ -46,107 +44,100 @@ def home():
         ]
         topics = list(db.topics.aggregate(pipeline))
         
+        # 현재 유저의 투표 기록을 가져와서 딕셔너리화 (ID: 선택항목)
+        user_votes = list(db.votes.find({"user_email": user_email}))
+        voted_dict = {str(v['topic_id']): v['selected'] for v in user_votes}
+        
         live_topics = []
-        # 만료시간이 지났다면 DB에서 Trash를 False로 업데이트
-        # attach recent comments to each topic
+        now = datetime.datetime.now()
+
         for t in topics:
-            t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=3000)         
+            t['_id'] = str(t['_id'])
+            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)         
 
-            if datetime.datetime.now() >= t['expire_at'] : 
-                t['trash'] = False
-                db.topics.update_one({"_id":t['_id']},{"$set":{"trash":False}})
-            
-            # Trash 값이 True인 것들만 새로운 리스트에 저장
-            if t['trash']:
-                t['_id'] = str(t['_id'])
-                live_topics.append(t)
+            if now >= t['expire_at']: 
+                db.topics.update_one({"_id": ObjectId(t['_id'])}, {"$set": {"trash": False}})
+                continue 
+            t['user_voted'] = voted_dict.get(t['_id'], None)
 
-            # 댓글 조회
             comments = list(db.comments.find({'topic_id': t['_id']}))
             for c in comments:
                 c['_id'] = str(c['_id'])
             t['comments'] = comments
-
-        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type)
-    except Exception as e:
-       print(e)
-    return redirect(url_for('login'))        
-
-    
-@app.route('/end_vote_page')
-def end_vote_page():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_info = db.users.find_one({"email": payload['email']}, {'_id': False})
-        
-        topics = list(db.topics.find({"trash":False}).sort('created_at', -1).limit(10))
-        
-        for t in topics:
-            t['_id'] = str(t['_id'])
             
-        return render_template('end_vote_page.html', user_info=user_info, topics=topics)
-    except:
+            live_topics.append(t)
+
+        return render_template('index.html', user_info=user_info, topics=live_topics, sort_now=sort_type, view_now=view_type)
+    except Exception as e:
+        print(f"Error: {e}")
         return redirect(url_for('login'))
 
-#현재 진행중인 투표에서 더보기 버튼
 @app.route('/api/get_topics', methods=['GET'])
 def get_more_topics():
     token_receive = request.cookies.get('mytoken')
-    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_email = payload['email']
 
-    skip_receive = int(request.args.get('skip', 0))
-    sort_type = request.args.get('sort', 'newest')
-    view_type = request.args.get('view', 'all')
-    
-    query = {"created_by": payload['email']} if view_type == 'mine' else {}
-    sort_query = get_sort_query(sort_type)
+        skip_receive = int(request.args.get('skip', 0))
+        sort_type = request.args.get('sort', 'newest')
+        view_type = request.args.get('view', 'all')
+        
+        query = {"trash": True}
+        if view_type == 'mine':
+            query["created_by"] = user_email
+            
+        sort_query = get_sort_query(sort_type)
 
-    pipeline = [
-        {"$match": query},
-        {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
-        {"$sort": dict(sort_query)},
-        {"$skip": skip_receive},
-        {"$limit": 10}
-    ]
-    topics = list(db.topics.aggregate(pipeline))
-    live_topics =[]
-    for t in topics:
-        t['_id'] = str(t['_id'])
-        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
+        pipeline = [
+            {"$match": query},
+            {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
+            {"$sort": dict(sort_query)},
+            {"$skip": skip_receive},
+            {"$limit": 10}
+        ]
+        topics = list(db.topics.aggregate(pipeline))
+        
+        user_votes = list(db.votes.find({"user_email": user_email}))
+        voted_dict = {str(v['topic_id']): v['selected'] for v in user_votes}
 
-        if t['trash']:
+        live_topics = []
+        for t in topics:
             t['_id'] = str(t['_id'])
+            t['expire_at'] = t['created_at'] + datetime.timedelta(hours=30)
+            t['user_voted'] = voted_dict.get(t['_id'], None)
             live_topics.append(t)
 
-    return jsonify({'result': 'success', 'topics': live_topics})
+        return jsonify({'result': 'success', 'topics': live_topics})
+    except:
+        return jsonify({'result': 'fail', 'msg': '인증 오류'})
 
-
-# 이미 끝이 난 투표에서 더보기 버튼
-@app.route('/api/get_end_topics', methods=['GET'])
-def get_more_end_topics():
-    skip_receive = int(request.args.get('skip', 0))
-    sort_type = request.args.get('sort', 'newest')
-    limit_count = 10
-    sort_query = get_sort_query(sort_type)
-
-    pipeline = [
-        {"$addFields": {"total_count": {"$add": ["$left_count", "$right_count"]}}},
-        {"$sort": dict(sort_query)},
-        {"$skip": skip_receive},
-        {"$limit": limit_count}
-    ]
-    topics = list(db.topics.aggregate(pipeline))
-    live_topics =[]
-    for t in topics:
-        t['_id'] = str(t['_id'])
-        t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)
-
-        if not t['trash']:
-            t['_id'] = str(t['_id'])
-            live_topics.append(t)
-
-    return jsonify({'result': 'success', 'topics': live_topics})
+@app.route('/api/vote', methods=['POST'])
+def vote():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_email = payload['email']
+        topic_id = request.form['topic_id']
+        option = request.form['option']
+        
+        existing_vote = db.votes.find_one({'user_email': user_email, 'topic_id': topic_id})
+        if existing_vote:
+            return jsonify({'result': 'fail', 'msg': '이미 투표에 참여하셨습니다.'})
+        
+        db.votes.insert_one({
+            'user_email': user_email, 
+            'topic_id': topic_id, 
+            'selected': option,
+            'voted_at': datetime.datetime.now()
+        })
+        
+        field = 'left_count' if option == 'left' else 'right_count'
+        db.topics.update_one({'_id': ObjectId(topic_id)}, {'$inc': {field: 1}})
+        
+        return jsonify({'result': 'success', 'msg': '투표가 완료되었습니다!'})
+    except Exception as e:
+        return jsonify({'result': 'fail', 'msg': '오류 발생'}), 403
 
 @app.route('/api/topic', methods=['POST'])
 def create_topic():
@@ -218,27 +209,6 @@ def login_post():
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     return jsonify({'result': 'success', 'token': token})
 
-@app.route('/api/vote', methods=['POST'])
-def vote():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        user_email = payload['email']
-        topic_id = request.form['topic_id']
-        option = request.form['option']
-        
-        if db.votes.find_one({'user_email': user_email, 'topic_id': topic_id}):
-            return jsonify({'msg': '이미 투표에 참여하셨습니다.'})
-        
-        db.votes.insert_one({'user_email': user_email, 'topic_id': topic_id, 'selected': option})
-        
-        field = 'left_count' if option == 'left' else 'right_count'
-        db.topics.update_one({'_id': ObjectId(topic_id)}, {'$inc': {field: 1}})
-        
-        return jsonify({'result': 'success', 'msg': '투표 성공!'})
-    except:
-        return jsonify({'msg': '인증 만료'}), 403
-
 @app.route('/api/comment', methods=['POST'])
 def post_comment():
     token_receive = request.cookies.get('mytoken')
@@ -251,7 +221,6 @@ def post_comment():
     except:
         return jsonify({'msg': '로그인 필요'}), 403
 
-    
 @app.route('/make_topic_page')
 def make_topic_page():
     return render_template('make_topic.html')
@@ -267,9 +236,9 @@ def get_comments():
 if __name__ == '__main__':
     if db.topics.count_documents({'left_item': '전공자'}) == 0:
         db.topics.insert_one({
-            'left_item': '전공자', 
+            'left_item': '전공자',
             'right_item': '비전공자',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': True
@@ -277,29 +246,29 @@ if __name__ == '__main__':
         
     if db.topics.count_documents({'left_item': 'Windows'}) == 0:
         db.topics.insert_one({
-            'left_item': 'Windows', 
+            'left_item': 'Windows',
             'right_item': 'Mac',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': True
         })
-    
+
     if db.topics.count_documents({'left_item': '개발자'}) == 0:
         db.topics.insert_one({
-            'left_item': '개발자', 
+            'left_item': '개발자',
             'right_item': '비개발자',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': True
         })
-        
+
     if db.topics.count_documents({'left_item': 'Android'}) == 0:
         db.topics.insert_one({
-            'left_item': 'Android', 
+            'left_item': 'Android',
             'right_item': 'iOS',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': True
@@ -307,22 +276,21 @@ if __name__ == '__main__':
 
     if db.topics.count_documents({'left_item': '혼자 몰입'}) == 0:
         db.topics.insert_one({
-            'left_item': '혼자 몰입', 
+            'left_item': '혼자 몰입',
             'right_item': '같이 협업',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': True
         })
-        
+
     if db.topics.count_documents({'left_item': '프론트엔드'}) == 0:
         db.topics.insert_one({
-            'left_item': '프론트엔드', 
+            'left_item': '프론트엔드',
             'right_item': '백엔드',
-            'left_count': 0, 
+            'left_count': 0,
             'right_count': 0,
             'created_at': datetime.datetime.now(),
             'trash': False
         })
-        
     app.run('0.0.0.0', port=5001, debug=True)
