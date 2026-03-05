@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Jungle VS - 대용량 대응 버전</title>
+  <title>Jungle VS</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -257,8 +257,8 @@
             <hr />
 
             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-              <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
-                Show Comments
+              <button id="toggle-btn-{{ topic._id }}" class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
+                댓글 {{ topic.comment_count }}개 보기
               </button>
             </div>
 
@@ -343,9 +343,10 @@
             let btnText = topic.user_voted ? '투표 완료' : '이 항목으로 투표 확정';
             let btnStyle = topic.user_voted ? 'background-color: #ccc; cursor: default' : 'background-color: #ccc; cursor: not-allowed';
             let btnDisabled = topic.user_voted ? 'disabled' : 'disabled';
+            let commentCnt = topic.comment_count || 0;
 
             let expire = new Date(topic.expire_at);
-            let timeStr = expire.getMonth() + "월 " + expire.getDay() + "일 " + expire.getHours() + "시 " + expire.getMinutes() + "분";
+            let timeStr = (expire.getMonth() + 1) + "월 " + expire.getDate() + "일 " + expire.getHours() + "시 " + expire.getMinutes() + "분";
 
             let tempHtml = `
                     <div class="topic-box has-background-success-light">
@@ -389,8 +390,8 @@
                             <hr />
 
                             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
-                              <button class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">
-                                Show Comments
+                              <button id="toggle-btn-${topic._id}" class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">
+                                댓글 ${commentCnt}개 보기
                               </button>
                             </div>
 
@@ -489,6 +490,17 @@
               `
             );
           }
+          let btn = $(`#toggle-btn-${topicId}`);
+          let currentText = btn.text();
+          let countMatch = currentText.match(/\d+/);
+          if (countMatch) {
+              let newCount = parseInt(countMatch[0]) + 1;
+              if (btn.text().includes("접기")) {
+                  btn.text(`댓글 ${newCount}개 접기`);
+              } else {
+                  btn.text(`댓글 ${newCount}개 보기`);
+              }
+          }
 
           $(`#input-${topicId}`).val('');
         },
@@ -506,9 +518,18 @@
         const topicId = $(this).data("topic-id");
         const commentBox = $(`#comment_box_${topicId}`);
         commentBox.toggle();
-        $(this).text(function (i, text) {
-          return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
-        });
+        
+        let isVisible = commentBox.is(":visible");
+        let btn = $(this);
+        let currentText = btn.text();
+        let countMatch = currentText.match(/\d+/);
+        let count = countMatch ? countMatch[0] : "0";
+
+        if (isVisible) {
+          btn.text(`댓글 ${count}개 접기`);
+        } else {
+          btn.text(`댓글 ${count}개 보기`);
+        }
       });
     };
 
@@ -525,7 +546,10 @@
 
           if (response.comments && response.comments.length > 0) {
             response.comments.forEach(comment => {
-              list.append(`<div><p><strong>${comment.user_email}</strong></p><p>${comment.content}</p></div>`);
+              list.append(`<div class="comment-item has-text-left">
+                  <span class="comment-user"><strong>${comment.user_email}</strong></span>:
+                  <span class="comment-text">${comment.content}</span>
+                </div>`);
             });
           } else {
           

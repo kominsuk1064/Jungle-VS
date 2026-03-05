@@ -166,14 +166,14 @@
 
             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
               <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
-                Show Comments
+                댓글 {{ topic.comment_count }}개 확인
               </button>
             </div>
 
             <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
               <div class="comment_container">
                 {% for comment in topic.comments %}
-                <div>
+                <div style="border-bottom: 1px solid #eee; padding: 5px 0; text-align: left;">
                   <p><strong>{{ comment.user_email }}</strong></p>
                   <p>{{ comment.content }}</p>
                 </div>
@@ -202,9 +202,18 @@
         const topicId = $(this).data("topic-id");
         const commentBox = $(`#comment_box_${topicId}`);
         commentBox.toggle();
-        $(this).text(function (i, text) {
-          return text === "Hide Comments" ? "Show Comments" : "Hide Comments";
-        });
+
+        let isVisible = commentBox.is(":visible");
+        let btn = $(this);
+        let currentText = btn.text();
+        let countMatch = currentText.match(/\d+/);
+        let count = countMatch ? countMatch[0] : "0";
+
+        if (isVisible) {
+          btn.text(`댓글 ${count}개 접기`);
+        } else {
+          btn.text(`댓글 ${count}개 확인`);
+        }
       });
     };
 
