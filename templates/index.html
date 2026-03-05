@@ -123,8 +123,14 @@
       direction: rtl;
     }
 
-    .comment_container>p {
+    .comment_container {
       display: inline-block;
+    }
+
+    .comment-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
     }
 
     .sort-container {
@@ -263,11 +269,11 @@
               </div>
               <hr />
 
-              <div class="comment_container">
+              <div class="comment_container" style="min-width: 428.38px;">
                 {% for comment in topic.comments %}
-                <div>
-                  <p><strong>{{ comment.user_email }}</strong></p>
-                  <p>{{ comment.content }}</p>
+                <div class="comment-item has-text-left">
+                  <span class="comment-user">{{ comment.user_email }}</span>:
+                  <span class="comment-text">{{ comment.content }}</span>
                 </div>
                 {% endfor %}
               </div>
@@ -473,7 +479,14 @@
         success: function (response) {
           comment_box.css("display", "block");
           if (list.length) {
-            list.append(`<div><p><strong>${response.comment ? response.comment.user_email : ''}</strong></p><p>${content}</p></div>`);
+            list.append(
+              `
+              <div class="comment-item has-text-left">
+                  <span class="comment-user">${response.comment ? response.comment.user_email : ''}</span>:
+                  <span class="comment-text">${content}</span>
+                </div>
+              `
+            );
           }
 
           $(`#input-${topicId}`).val('');
