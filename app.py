@@ -23,7 +23,7 @@ def home():
         
         for t in topics:
             t['_id'] = str(t['_id'])
-            # 만든지 30분 후에 만료
+            # 만든지 30초 후에 만료
             t['expire_at'] = t['created_at'] + datetime.timedelta(seconds=30)           
 
         return render_template('index.html', user_info=user_info, topics=topics)
