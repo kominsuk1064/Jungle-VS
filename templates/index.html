@@ -136,6 +136,16 @@
                   </div>
                 </div>
               </div>
+
+              <progress
+                id="progress-{{topic._id}}"
+                class="progress is-large"
+                data-left-count="{{ topic.left_count }}"
+                data-right-count="{{ topic.right_count }}"
+              ></progress>
+
+              <p>left: {{ topic.left_count }}</p>
+              <p>right: {{ topic.right_count }}</p>
             </div>
           </div>
         </div>
@@ -249,11 +259,25 @@
         $(`#btn-left-${topicId}`).removeClass("selected");
         $(`#btn-right-${topicId}`).removeClass("selected");
 
+        $(`#progress-${topicId}`).removeClass("is-rtl");
+
+        const progressBar = $(`#progress-${topicId}`);
+
         if (option === "left") {
           $(`#btn-left-${topicId}`).addClass("selected");
+          const leftCount = progressBar.data("left-count");
+          progressBar.attr("value", leftCount);
         } else {
           $(`#btn-right-${topicId}`).addClass("selected");
+          progressBar.addClass("is-rtl");
+          const rightCount = progressBar.data("right-count");
+          progressBar.attr("value", rightCount);
         }
+
+        progressBar.attr(
+          "max",
+          progressBar.data("left-count") + progressBar.data("right-count"),
+        );
 
         let confirmBtn = $(`#confirm-${topicId}`);
         confirmBtn.prop("disabled", false);
