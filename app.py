@@ -60,7 +60,7 @@ def home():
         return render_template('index.html', user_info=user_info, topics=topics, sort_now=sort_type,view_now=view_type)
     except Exception as e:
        print(e)
-        return redirect(url_for('login'))
+    return redirect(url_for('login'))
     
 @app.route('/end_vote_page')
 def end_vote_page():
