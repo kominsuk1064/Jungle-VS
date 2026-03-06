@@ -248,7 +248,7 @@
             <div class="is-flex is-justify-content-space-between">
               <p> {{ topic.expire_at.strftime("%m월 %d일 %H시 %M분") }}에 만료 </p>
               <p>총 투표수: {{ total }}</p>
-              <p class="made-by">made-by: {{ topic.user.nickname }}</p>
+              <p class="made-by">made-by: {{ topic.created_by }}</p>
             </div>
 
             <hr />
@@ -378,7 +378,7 @@
                             <div class="is-flex is-justify-content-space-between">
                               <p>${timeStr}에 만료</p>
                               <p>총 투표수: ${total}</p>
-                              <p class="made-by">made-by: ${user_info.nickname}</p>
+                              <p class="made-by">made-by: ${topic.created_by}</p>
                             </div>
 
                             <hr />
