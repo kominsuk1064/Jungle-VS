@@ -157,7 +157,7 @@
             <div class="is-flex is-justify-content-space-between">
               <p> {{ topic.expire_at.strftime("%m/%d %H:%M") }} 만료됨 </p>
               <p>총 투표수: {{ total }}</p>
-              <p class="made-by">made-by: {{ user_info.nickname }}</p>
+              <p class="made-by">made-by: {{ topic.created_by }}</p>
             </div>
 
             <hr />
@@ -257,7 +257,7 @@
                         <div class="is-flex is-justify-content-space-between">
                           <p>${timeStr} 만료됨</p>
                           <p>총 투표수: ${total}</p>
-                          <p class="made-by">made-by: ${user_info.nickname}</p>
+                          <p class="made-by">made-by: ${topic.created_by}</p>
                         </div>
 
                         <hr />
