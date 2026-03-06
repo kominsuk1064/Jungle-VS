@@ -4,24 +4,16 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Make a Topic</title>
+    <title>Jungle Vs</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <style>
-        .field {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .field label {
-            margin: 0 15px;
-            font-weight: bold;
-        }
-
-        .hero-body {
-            background-color: #fcfcfc;
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         .animated-bg {
@@ -57,18 +49,18 @@
             <div class="box has-text-centered has-background-success-light" style="min-height: 400px;">
                 <h1 class="title is-1 m-5">Make a Topic</h1>
                 <p class="subtitle">새로운 VS 주제를 등록해보세요!</p>
-                <div class="field mb-6">
+                <div class="field is-flex is-align-items-center is-justify-content-center mt-5">
                     <div class="control">
-                        <input id="input-left" class="input is-medium is-danger" type="text" placeholder="항목 A 입력" />
+                        <input id="input-left" class="input is-medium is-info" type="text" placeholder="항목 A 입력" />
                     </div>
-                    <label class="label">VS</label>
+                    <label class="label mx-4 mb-0">VS</label>
                     <div class="control">
-                        <input id="input-right" class="input is-medium input is-info" type="text" placeholder="항목 B 입력" />
+                        <input id="input-right" class="input is-medium is-danger" type="text" placeholder="항목 B 입력" />
                     </div>
                 </div>
-                <div class="buttons is-centered mt-6">
-                    <button class="button is-link is-rounded is-large" onclick="makeTopic()">주제 생성하기</button>
-                    <button class="button is-light is-rounded is-large" onclick="location.href='/'">돌아가기</button>
+                <div class="is-centered">
+                    <button class="button is-link is-rounded is-large m-5" onclick="makeTopic()">주제 생성하기</button>
+                    <button class="button is-light is-rounded is-large m-5" onclick="location.href='/'">돌아가기</button>
                 </div>
             </div>
         </div>
