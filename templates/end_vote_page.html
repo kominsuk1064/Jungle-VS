@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Jungle VS - 대용량 대응 버전</title>
+  <title>Jungle VS</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: linear-gradient(135deg, #ebfffc,#e2f3f0, #d8e7e5, #cfdbd9,#c6cecd, #bdc2c1, #b3b6b6,#aaaaaa);
+      background: linear-gradient(135deg, #ebfffc, #e2f3f0, #d8e7e5, #cfdbd9, #c6cecd, #bdc2c1, #b3b6b6, #aaaaaa);
       min-height: 100vh;
     }
 
@@ -46,9 +46,6 @@
       width: 40%;
       display: inline-block;
       margin: 0 1rem;
-    }
-
-    .box {
       cursor: default !important;
     }
 
@@ -83,6 +80,12 @@
     .navbar-transparent {
       background-color: transparent;
       box-shadow: none;
+    }
+
+    .comment-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -122,7 +125,7 @@
     </div>
   </section>
 
-  <div id="topic-list" class="">
+  <div id="topic-list">
     {% for topic in topics %}
     <div class="topic-box has-background-success-light">
       <div class="hero">
@@ -143,7 +146,7 @@
             </div>
 
             {% set total = topic.left_count + topic.right_count %}
-            <progress id="progress-{{topic._id}}" class="progress is-large"
+            <progress class="progress is-large"
               value="{% if total == 0 %}1{% else %}{{ topic.left_count }}{% endif %}"
               max="{% if total == 0 %}2{% else %}{{ total }}{% endif %}"></progress>
 
@@ -166,10 +169,10 @@
             </div>
 
             <div id="comment_box_{{ topic._id }}" class="comment_box" style="display: none">
-              <div class="comment_container">
+              <div class="comment_container" style="min-width: 428.38px;">
                 {% for comment in topic.comments %}
-                  <p><strong>{{ comment.user_nickname }}</strong></p>
-                  <p>{{ comment.content }}</p>
+                <div class="comment-item has-text-left">
+                  <p><strong>{{ comment.user_nickname }}</strong>: {{ comment.content }}</p>
                 </div>
                 {% endfor %}
               </div>
@@ -181,14 +184,105 @@
     {% endfor %}
   </div>
 
-  <div class="section has-text-centered">
+  <div class="is-flex is-align-items-center is-justify-content-center mx-auto pb-6">
+    <button id="load-more-btn" class="button is-success" onclick="loadMore()">
+      종료된 투표 더보기 (+10)
+    </button>
+  </div>
+
+  <div class="section has-text-centered pt-0">
       <button class="button is-light" onclick="location.href='/'">메인으로 돌아가기</button>
   </div>
 
   <script>
+    let currentCount = 10;
+
     function logout() {
       document.cookie = "mytoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       window.location.href = "/login";
+    }
+
+    function loadMore() {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_topics",
+        data: {
+          skip: currentCount,
+          trash: 'false'
+        },
+        success: function (response) {
+          let newTopics = response.topics;
+
+          if (newTopics.length === 0) {
+            alert("더 이상 불러올 주제가 없습니다.");
+            $("#load-more-btn").hide();
+            return;
+          }
+
+          newTopics.forEach((topic) => {
+            let total = topic.left_count + topic.right_count;
+            let barVal = total === 0 ? 1 : topic.left_count;
+            let barMax = total === 0 ? 2 : total;
+
+            let leftWinner = topic.left_count > topic.right_count ? 'selected' : '';
+            let rightWinner = topic.left_count < topic.right_count ? 'selected' : '';
+            
+            let expire = new Date(topic.expire_at);
+            let timeStr = (expire.getMonth() + 1) + "/" + expire.getDate() + " " + expire.getHours() + ":" + expire.getMinutes();
+
+            let tempHtml = `
+                <div class="topic-box has-background-success-light">
+                  <div class="hero">
+                    <div class="hero-body">
+                      <div class="container has-text-centered">
+                        <div class="battle">
+                          <div class="box ${leftWinner}">
+                            <div class="option">
+                              <div class="option-name">${topic.left_item} (${topic.left_count})</div>
+                            </div>
+                          </div>
+                          <div class="box ${rightWinner}">
+                            <div class="option">
+                              <div class="option-name">${topic.right_item} (${topic.right_count})</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <progress class="progress is-large" value="${barVal}" max="${barMax}"></progress>
+
+                        <button class="button has-text-centered m-5" disabled style="background-color: #ccc; cursor: default">
+                          투표 종료됨 (결과 발표)
+                        </button>
+
+                        <div class="is-flex is-justify-content-space-between">
+                          <p>${timeStr} 만료됨</p>
+                          <p>총 투표수: ${total}</p>
+                          <p class="made-by">made-by: ${topic.created_by}</p>
+                        </div>
+
+                        <hr />
+
+                        <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                          <button class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">
+                            댓글 ${topic.comment_count || 0}개 확인
+                          </button>
+                        </div>
+
+                        <div id="comment_box_${topic._id}" class="comment_box" style="display: none">
+                          <div class="comment_container" style="min-width: 428.38px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>`;
+            $("#topic-list").append(tempHtml);
+            getComments(topic._id); // 댓글 목록도 같이 불러오기
+          });
+          attachToggleEvents();
+          currentCount += 10;
+        },
+      });
     }
 
     function attachToggleEvents() {
@@ -210,6 +304,27 @@
         }
       });
     };
+
+    function getComments(topicId) {
+      $.ajax({
+        type: "GET",
+        url: "/api/get_comments",
+        data: { topic_id: topicId },
+        success: function (response) {
+          const commentBox = $(`#comment_box_${topicId}`);
+          const list = commentBox.find('.comment_container');
+          list.empty();
+
+          if (response.comments && response.comments.length > 0) {
+            response.comments.forEach(comment => {
+              list.append(`<div class="comment-item has-text-left">
+                  <p><strong>${comment.user_nickname}</strong>: ${comment.content}</p>
+                </div>`);
+            });
+          }
+        },
+      });
+    }
 
     $(document).ready(function () {
       attachToggleEvents();
