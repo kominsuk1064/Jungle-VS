@@ -36,9 +36,17 @@ def home():
             {"$set": {"trash": False}}
         )
 
+        bookmark_docs = list(db.bookmarks.find({"user_email": user_email}))
+        bookmarked_ids = {bookmark['topic_id'] for bookmark in bookmark_docs}
+        bookmarked_object_ids = [
+            ObjectId(topic_id) for topic_id in bookmarked_ids if ObjectId.is_valid(topic_id)
+        ]
+
         query = {"trash": True}
         if view_type == 'mine':
             query["created_by"] = user_email
+        elif view_type == 'bookmarks':
+            query["_id"] = {"$in": bookmarked_object_ids}
             
         sort_query = get_sort_query(sort_type)
         
@@ -57,6 +65,7 @@ def home():
         for t in topics:
             t['_id'] = str(t['_id'])
             t['user_voted'] = voted_dict.get(t['_id'], None)
+            t['is_bookmarked'] = t['_id'] in bookmarked_ids
 
             comments = list(db.comments.find({'topic_id': t['_id']}))
             for c in comments:
@@ -69,6 +78,11 @@ def home():
     except Exception as e:
         print(f"Error: {e}")
         return redirect(url_for('login'))
+
+@app.route('/bookmarks')
+def bookmarks_page():
+    sort_type = request.args.get('sort', 'newest')
+    return redirect(url_for('home', view='bookmarks', sort=sort_type))
 
 @app.route('/end_vote')
 def end_vote_page():
@@ -102,10 +116,18 @@ def get_more_topics():
         sort_type = request.args.get('sort', 'newest')
         view_type = request.args.get('view', 'all')
         is_trash = request.args.get('trash', 'true').lower() == 'true'
+
+        bookmark_docs = list(db.bookmarks.find({"user_email": user_email}))
+        bookmarked_ids = {bookmark['topic_id'] for bookmark in bookmark_docs}
+        bookmarked_object_ids = [
+            ObjectId(topic_id) for topic_id in bookmarked_ids if ObjectId.is_valid(topic_id)
+        ]
         
         query = {"trash": is_trash}
         if view_type == 'mine':
             query["created_by"] = user_email
+        elif view_type == 'bookmarks':
+            query["_id"] = {"$in": bookmarked_object_ids}
             
         sort_query = get_sort_query(sort_type)
 
@@ -125,11 +147,41 @@ def get_more_topics():
         for t in topics:
             t['_id'] = str(t['_id'])
             t['user_voted'] = voted_dict.get(t['_id'], None)
+            t['is_bookmarked'] = t['_id'] in bookmarked_ids
             live_topics.append(t)
 
         return jsonify({'result': 'success', 'topics': live_topics})
     except:
         return jsonify({'result': 'fail', 'msg': '인증 오류'})
+
+@app.route('/api/bookmark', methods=['POST'])
+def toggle_bookmark():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        user_email = payload['email']
+        topic_id = request.form['topic_id']
+
+        if not ObjectId.is_valid(topic_id):
+            return jsonify({'result': 'fail', 'msg': '잘못된 주제입니다.'}), 400
+
+        topic = db.topics.find_one({'_id': ObjectId(topic_id)})
+        if not topic:
+            return jsonify({'result': 'fail', 'msg': '주제를 찾을 수 없습니다.'}), 404
+
+        bookmark = db.bookmarks.find_one({'user_email': user_email, 'topic_id': topic_id})
+        if bookmark:
+            db.bookmarks.delete_one({'_id': bookmark['_id']})
+            return jsonify({'result': 'success', 'bookmarked': False, 'msg': '북마크를 해제했습니다.'})
+
+        db.bookmarks.insert_one({
+            'user_email': user_email,
+            'topic_id': topic_id,
+            'created_at': datetime.datetime.now()
+        })
+        return jsonify({'result': 'success', 'bookmarked': True, 'msg': '북마크에 저장했습니다.'})
+    except:
+        return jsonify({'result': 'fail', 'msg': '로그인이 필요합니다.'}), 403
 
 @app.route('/api/vote', methods=['POST'])
 def vote():

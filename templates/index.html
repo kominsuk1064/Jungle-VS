@@ -188,6 +188,9 @@
           <li class="{% if view_now == 'mine' %}is-active{% endif %}">
             <a href="/?view=mine&sort={{ sort_now }}">내가 만든 투표</a>
           </li>
+          <li class="{% if view_now == 'bookmarks' %}is-active{% endif %}">
+            <a href="/bookmarks?sort={{ sort_now }}">북마크한 투표</a>
+          </li>
         </ul>
       </div>
 
@@ -256,6 +259,11 @@
             <hr />
 
             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+              <button id="bookmark-{{ topic._id }}"
+                class="button is-warning {% if not topic.is_bookmarked %}is-outlined{% endif %} mr-2"
+                onclick="toggleBookmark('{{ topic._id }}')">
+                {% if topic.is_bookmarked %}북마크 해제{% else %}북마크 저장{% endif %}
+              </button>
               <button class="comment-toggle-btn button is-success" data-topic-id="{{ topic._id }}">
                 Show Comments
               </button>
@@ -342,6 +350,8 @@
             let btnText = topic.user_voted ? '투표 완료' : '이 항목으로 투표 확정';
             let btnStyle = topic.user_voted ? 'background-color: #ccc; cursor: default' : 'background-color: #ccc; cursor: not-allowed';
             let btnDisabled = topic.user_voted ? 'disabled' : 'disabled';
+            let bookmarkText = topic.is_bookmarked ? '북마크 해제' : '북마크 저장';
+            let bookmarkClass = topic.is_bookmarked ? 'button is-warning mr-2' : 'button is-warning is-outlined mr-2';
 
             let expire = new Date(topic.expire_at);
             let timeStr = expire.getMonth() + "월 " + expire.getDay() + "일 " + expire.getHours() + "시 " + expire.getMinutes() + "분";
@@ -388,6 +398,9 @@
                             <hr />
 
                             <div class="is-flex is-align-items-center is-justify-content-center mx-auto">
+                              <button id="bookmark-${topic._id}" class="${bookmarkClass}" onclick="toggleBookmark('${topic._id}')">
+                                ${bookmarkText}
+                              </button>
                               <button class="comment-toggle-btn button is-success" data-topic-id="${topic._id}">
                                 Show Comments
                               </button>
@@ -413,6 +426,33 @@
           });
           attachToggleEvents();
           currentCount += 10;
+        },
+      });
+    }
+
+    function updateBookmarkButton(topicId, isBookmarked) {
+      const bookmarkBtn = $(`#bookmark-${topicId}`);
+      bookmarkBtn.text(isBookmarked ? "북마크 해제" : "북마크 저장");
+      bookmarkBtn.toggleClass("is-outlined", !isBookmarked);
+    }
+
+    function toggleBookmark(topicId) {
+      $.ajax({
+        type: "POST",
+        url: "/api/bookmark",
+        data: { topic_id: topicId },
+        success: function (response) {
+          alert(response.msg);
+          if (response.result !== "success") {
+            return;
+          }
+
+          if (currentView === "bookmarks" && !response.bookmarked) {
+            window.location.reload();
+            return;
+          }
+
+          updateBookmarkButton(topicId, response.bookmarked);
         },
       });
     }
